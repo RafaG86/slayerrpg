@@ -1007,6 +1007,8 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     { id: 'botasA',      name: 'Botas aladas',       cost: 2,  desc: '+10% de velocidad del mundo.' },
     { id: 'reinversion', name: 'Reinversión',        cost: 3,  desc: 'Cada moneda recogida vale además el 10% de tus monedas por segundo.' },
     { id: 'almas',       name: 'Segador de almas',   cost: 4,  desc: '25% de probabilidad de que un moob derrotado cuente doble.' },
+    { id: 'arco',        name: 'Libro de proyectiles', cost: 4, desc: 'Arco: mientras saltas disparas flechas solas. Los moobs derrotados con flecha dan +50% de almas.' },
+    { id: 'flechas2',    name: 'Flecha doble',       cost: 6,  desc: 'El arco dispara una segunda flecha hacia abajo. Requiere el Libro de proyectiles.', req: 'arco' },
     { id: 'grupos4',     name: 'Hordas',             cost: 5,  desc: 'Los grupos pueden traer hasta 4 monedas o moobs.' },
     { id: 'herencia',    name: 'Herencia',           cost: 6,  desc: 'Conservas el 10% de tus monedas al ascender.' },
     { id: 'portales',    name: 'Portales',           cost: 3,  desc: 'Desbloquea el portal para viajar entre dimensiones.' },
@@ -1014,7 +1016,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   ];
   function buyNode(id) {
     const n = TREE.find(x => x.id === id);
-    if (!n || has(id) || asc.psAvail < n.cost) return;
+    if (!n || has(id) || asc.psAvail < n.cost || (n.req && !has(n.req))) return;
     asc.psAvail -= n.cost; asc.nodes.add(id);
     if (id === 'cazador') UPGRADES.moobs.owned = true;
     renderStats(); saveGame();
@@ -1024,7 +1026,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     wallet.moob = 0;
     EQUIP.forEach(e => { e.lv = 0; }); eqUps.clear();
     UPGRADES.moobs.owned = has('cazador');
-    items = []; group = null; waitT = .6; altHigh = false;
+    items = []; group = null; waitT = .6; altHigh = false; arrows = [];
     if (bonus.on) { bonus.on = false; document.getElementById('bonusBar').hidden = true; hero.y = 0; hero.vy = 0; hero.air = false; }
   }
   function ascend() {
@@ -1073,7 +1075,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   }
 
   // ---------- estadísticas de por vida ----------
-  const freshLife = () => ({ travels: 0, bonusRuns: 0, bonusClears: 0, boosts: 0, boxes: 0, giants: 0, passive: 0, coins: 0, moobs: 0, jumps: 0, attacks: 0, perfect: 0, groups: 0, streak: 0, bestStreak: 0, equipBought: 0, moobsUnlocked: 0, spent: 0, dist: 0, time: 0 });
+  const freshLife = () => ({ arrowKills: 0, travels: 0, bonusRuns: 0, bonusClears: 0, boosts: 0, boxes: 0, giants: 0, passive: 0, coins: 0, moobs: 0, jumps: 0, attacks: 0, perfect: 0, groups: 0, streak: 0, bestStreak: 0, equipBought: 0, moobsUnlocked: 0, spent: 0, dist: 0, time: 0 });
   let life = freshLife();
 
   let items = [], group = null, waitT = .6, altHigh = false, clock = 0, fx = [];
@@ -1190,6 +1192,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     { id: 'a1',     name: 'Renacer',            text: 'Asciende por primera vez',    prog: () => asc.count,     goal: 1 },
     { id: 'u1',     name: 'Más allá',           text: 'Haz una ultra ascensión',     prog: () => asc.ultras,    goal: 1 },
     { id: 'bn1',    name: 'Otra dimensión',     text: 'Entra a una etapa bonus',     prog: () => life.bonusRuns, goal: 1 },
+    { id: 'bow100', name: 'Arquero',            text: 'Derrota 100 moobs con el arco', prog: () => life.arrowKills, goal: 100 },
     { id: 'tr1',    name: 'Viajero',            text: 'Viaja por el portal',         prog: () => life.travels,  goal: 1 },
     { id: 'trall',  name: 'Turista dimensional', text: 'Visita las 6 dimensiones',   prog: () => visited.size,  goal: 6 },
     { id: 'bnc',    name: 'Sin caerse',         text: 'Completa una etapa bonus',    prog: () => life.bonusClears, goal: 1 },
@@ -1204,6 +1207,54 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
 
   // gigantes: moob grande en el piso con 4 de vida; lo dañan el toque y el ataque
   const GIANT = { hp: 4, reward: 25, chance: .12 };
+
+  // ---------- arco ----------
+  // Como el "Sacred Book of Projectiles" del original: mientras el héroe está en el aire dispara flechas solas.
+  // Los moobs derrotados con flecha dan +50% de almas.
+  const BOW = { every: .35, speed: 260 };
+  let arrows = [], bowT = 0;
+  function updateBow(dt) {
+    if (has('arco') && hero.air) {
+      bowT -= dt;
+      if (bowT <= 0) {
+        bowT = BOW.every;
+        const y = GROUND - 14 + hero.y;
+        arrows.push({ x: HERO_X + 6, y, vx: BOW.speed, vy: 30 });
+        if (has('flechas2')) arrows.push({ x: HERO_X + 6, y: y + 2, vx: BOW.speed * .9, vy: 110 });
+      }
+    } else bowT = 0;
+    for (const a of arrows) {
+      a.x += a.vx * dt; a.y += a.vy * dt;
+      if (bonus.on) {
+        for (const it of bonus.items) {
+          if (!it.alive || it.type !== 'moob') continue;
+          const sx = it.wx - scroll;
+          if (Math.abs(sx - a.x) < 7 && Math.abs(it.y - a.y) < 7) { a.dead = true; life.arrowKills++; bonusCollect(it, sx, 1.5); break; }
+        }
+      } else if (group && group.type === 'moob' && items.length) {
+        for (const it of items) {
+          if (!it.alive) continue;
+          const sx = it.wx - scroll, cy = itemY(it), r = group.giant ? 14 : 7;
+          if (Math.abs(sx - a.x) < r && Math.abs(cy - a.y) < r) {
+            a.dead = true;
+            if (group.giant) { it.hp--; group.air = 1; if (it.hp <= 0) { life.arrowKills++; resolve(it, 'arrow', sx, cy); } }
+            else { life.arrowKills++; resolve(it, 'arrow', sx, cy); }
+            break;
+          }
+        }
+      }
+    }
+    arrows = arrows.filter(a => !a.dead && a.x < W + 10 && a.y < GROUND + 2);
+  }
+  function drawArrows() {
+    for (const a of arrows) {
+      const ang = Math.atan2(a.vy, a.vx), cx = Math.cos(ang), sy = Math.sin(ang);
+      g.fillStyle = '#c9a26b';
+      for (let i = 0; i < 7; i++) g.fillRect(Math.round(a.x - cx * i), Math.round(a.y - sy * i), 1, 1);
+      g.fillStyle = '#dfeaf5'; g.fillRect(Math.round(a.x), Math.round(a.y) - 1, 2, 3);
+      g.fillStyle = '#ff8fb8'; g.fillRect(Math.round(a.x - cx * 7) - 1, Math.round(a.y - sy * 7) - 1, 2, 1); g.fillRect(Math.round(a.x - cx * 7) - 1, Math.round(a.y - sy * 7) + 1, 2, 1);
+    }
+  }
 
   // ---------- etapa bonus ----------
   // Un nivel aparte con plataformas y huecos: el héroe sigue corriendo solo y el jugador salta.
@@ -1250,14 +1301,14 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     } else toast(`Te caíste. Etapa bonus terminada: ${fmt(bonus.coins)} monedas y ${nf(bonus.moobs)} moobs`);
     renderStats(); saveGame();
   }
-  function bonusCollect(it, sx) {
+  function bonusCollect(it, sx, extra = 1) {
     it.alive = false;
     let amt;
     if (it.type === 'moneda') {
       amt = (1 + 2 * totalCps()) * buffMult('coin') * dimMult('coin') * (1 + actBonus());
       wallet.moneda += amt; life.coins += amt; bonus.coins += amt;
     } else {
-      amt = (has('almas') && Math.random() < .25 ? 2 : 1) * buffMult('soul') * dimMult('soul') * (1 + actBonus());
+      amt = (has('almas') && Math.random() < .25 ? 2 : 1) * buffMult('soul') * dimMult('soul') * (1 + actBonus()) * extra;
       wallet.moob += amt; life.moobs += amt; bonus.moobs += amt;
     }
     const T = ITEM[it.type];
@@ -1362,12 +1413,13 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
       } else {
         if (has('almas') && Math.random() < .25) amt *= 2;
         amt *= buffMult('soul') * dimMult('soul');
+        if (result === 'arrow') amt *= 1.5;
         if (group.giant) life.giants++;
       }
       amt *= 1 + actBonus();
       group.got++; stats.got++; wallet[group.type] += amt;
       if (group.type === 'moneda') life.coins += amt; else life.moobs += amt;
-      if (result === 'atk') group.air++;
+      if (result === 'atk' || result === 'arrow') group.air++;
       const T = ITEM[group.type];
       for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; fx.push({ x: sx, y: cy, vx: Math.cos(a) * 40, vy: Math.sin(a) * 40, life: .4, kind: 'spark', col: T.spark }); }
       fx.push({ x: sx, y: cy - 6, vx: 0, vy: -22, life: .7, kind: 'text', col: T.text, val: '+' + fmtCps(amt) });
@@ -1499,7 +1551,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
       const T = ITEM[e.type];
       let res, cls;
       if (!e.done) { res = 'En camino'; cls = 'wait'; }
-      else { res = `${e.got}/${e.count}` + (e.air ? ` · ${e.air} con ataque` : ''); cls = e.got === e.count ? 'ok' : e.got ? 'part' : 'miss'; }
+      else { res = `${e.got}/${e.count}` + (e.air ? ` · ${e.air} con ataque o flecha` : ''); cls = e.got === e.count ? 'ok' : e.got ? 'part' : 'miss'; }
       return `<li><span class="n">#${e.n}</span><span class="pill ${e.hk}">${e.hk}</span><span class="what"><i class="dot ${e.type}"></i>${e.giant ? 'moob gigante' : `${e.count} ${e.count > 1 ? T.plural : T.name}`}</span><span class="res ${cls}">${res}</span></li>`;
     }).join('') : '<li class="empty" style="display:block">Aún no aparece ningún grupo.</li>';
   }
@@ -1639,11 +1691,11 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     }
     let canNode = false;
     TREE.forEach(n => {
-      const card = tl.querySelector(`[data-node="${n.id}"]`), own = has(n.id), falta = n.cost - asc.psAvail;
+      const card = tl.querySelector(`[data-node="${n.id}"]`), own = has(n.id), falta = n.cost - asc.psAvail, reqMiss = n.req && !has(n.req);
       card.classList.toggle('owned', own);
-      card.querySelector('.up-state').textContent = own ? 'Comprado. Se mantiene al ascender.' : falta > 0 ? `Te faltan ${falta} PS.` : '¡Ya te alcanza!';
-      const b = card.querySelector('button'); b.hidden = own; b.disabled = falta > 0;
-      if (!own && falta <= 0) canNode = true;
+      card.querySelector('.up-state').textContent = own ? 'Comprado. Se mantiene al ascender.' : reqMiss ? 'Primero compra el Libro de proyectiles.' : falta > 0 ? `Te faltan ${falta} PS.` : '¡Ya te alcanza!';
+      const b = card.querySelector('button'); b.hidden = own; b.disabled = falta > 0 || reqMiss;
+      if (!own && falta <= 0 && !reqMiss) canNode = true;
     });
     // ultra
     const ul = has('ultra');
@@ -1730,7 +1782,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
       ['Ultra ascensiones', nf(asc.ultras)], ['PUS ganados', nf(asc.uspTotal)],
       ['Boosts usados', nf(life.boosts)], ['Cajas abiertas', nf(life.boxes)],
       ['Dimensión actual', D().name], ['Viajes por portal', nf(life.travels)],
-      ['Gigantes derrotados', nf(life.giants)], ['Etapas bonus', `${nf(life.bonusClears)} completas de ${nf(life.bonusRuns)}`], ['Logros', `${achieved.size} / ${ACH.length}`],
+      ['Gigantes derrotados', nf(life.giants)], ['Moobs con flecha', nf(life.arrowKills)], ['Etapas bonus', `${nf(life.bonusClears)} completas de ${nf(life.bonusRuns)}`], ['Logros', `${achieved.size} / ${ACH.length}`],
       ['Monedas por segundo', fmtCps(totalCps())], ['Monedas pasivas', fmt(life.passive)],
       ['Monedas gastadas', fmt(life.spent)], ['Piezas compradas', nf(life.equipBought)],
     ];
@@ -1767,6 +1819,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     hero.animT += dt;
     if (hero.pendingAerial && hero.air && hero.vy > -70) { hero.pendingAerial = false; hero.atkT = 0; hero.aerial = true; }
     if (!hero.air) hero.pendingAerial = false;
+    updateBow(dt);
     if (bonus.on) { autoBonus(); updateBonus(); }
     else { autoPlay(); updateMoob(dt); updateBox(dt); updateOrb(dt); }
 
@@ -1816,6 +1869,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     dust = dust.filter(d => (d.life -= dt) > 0);
     for (const d of dust) { d.x += (d.vx - speed * .3) * dt; d.y += d.vy * dt; d.vy += 30 * dt; g.fillStyle = `rgba(239,233,255,${Math.min(1, d.life * 2) * .6})`; g.fillRect(d.x | 0, d.y | 0, 2, 2); }
 
+    drawArrows();
     drawFx(dt);
     if (flashT > 0) { flashT -= dt; g.fillStyle = `rgba(217,198,255,${Math.max(0, flashT / .6)})`; g.fillRect(0, 0, W, H); }
     if ((uiTick += dt) > .1) {

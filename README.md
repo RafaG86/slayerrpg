@@ -39,6 +39,7 @@ Abre `moobs-slayer/index.html` en el navegador para jugar. No necesita instalaci
 - Etapa bonus: se entra tocando un portal (aparece cada 2–5 min tras gastar 500 monedas o ascender) o por una caja aleatoria. Nivel de 4 secciones con plataformas y huecos; arcos de monedas sobre cada hueco (cada moneda vale 1 + 2 s de producción) y moobs en las plataformas. Caerse termina la etapa (se conserva lo recogido); completarla da +50% de las monedas recogidas y una caja plateada.
 - Portales y dimensiones (nodo "Portales" del árbol, 3 PS): botón arriba a la derecha; recarga de 10 minutos. Cada dimensión cambia paisaje, color de los moobs y bonos:
   - Colinas (inicio) · Bosque (almas ×1.5, 5 PS) · Fábrica (producción ×1.5, 15 PS) · Jungla (30% gigantes y almas ×1.25, 30 PS) · Desierto ardiente (monedas ×2, 60 PS) · Espacio funky (gravedad baja y todo ×1.25, tras una ultra ascensión). El requisito de PS usa el récord de PS alcanzado.
-- 20 logros (pestaña Estadísticas): cada uno da +1% de monedas por segundo.
+- Arco (nodo "Libro de proyectiles", 4 PS): mientras el héroe está en el aire dispara flechas solas cada 0,35 s; los moobs derrotados con flecha dan +50% de almas y las flechas también dañan a los gigantes. "Flecha doble" (6 PS) agrega una segunda flecha hacia abajo.
+- 21 logros (pestaña Estadísticas): cada uno da +1% de monedas por segundo.
 - Guardado automático en el navegador (localStorage, clave `moobs-slayer-save-v1`): monedas, moobs, equipo, mejoras, misiones, estadísticas y configuración. Se guarda cada 5 s, al comprar o reclamar y al cerrar la página; se carga sola al abrir el juego.
 - Panel de patrones de aparición para estudiar y mejorar el respawn.
