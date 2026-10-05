@@ -2,6 +2,8 @@
 
 ## Moobs Slayer
 
+Estilo visual cartoon suave: todo se dibuja en vectorial a la resolución real de la pantalla (canvas escalado con devicePixelRatio), con degradados, contornos redondeados, halos y nubes. Fuente de la interfaz: Fredoka.
+
 Juego de plataformas 2D estilo Idle Slayer. El héroe corre solo por el escenario y el jugador salta para recoger monedas. Los moobs se desbloquean como mejora.
 
 Abre `moobs-slayer/index.html` en el navegador para jugar. No necesita instalación.
@@ -21,8 +23,8 @@ Abre `moobs-slayer/index.html` en el navegador para jugar. No necesita instalaci
 - Monedas en grupos de 1 a 3, siempre por encima del piso.
 - Mejora "Llegan los moobs" (10 monedas): desbloquea los moobs, que pueden aparecer a cualquier altura.
 - Tienda (botón abajo a la derecha, tecla T) con cinco secciones:
-  - **Equipamiento** (modelo Idle Slayer): espada, escudo, armadura, casco, botas veloces y anillo de riqueza. Cada pieza produce monedas por segundo; cada nivel cuesta un 15% más. Desde el casco, cada pieza pide completar una misión.
-  - **Mejoras**: "Llegan los moobs" y mejoras de hito (niveles 10, 50, 100, 150 y 200 de cada pieza) que dan +100% de producción, sumadas sobre la base.
+  - **Equipamiento** (modelo Idle Slayer): las 18 piezas del original con sus costos base y producción — espada, escudo, armadura, casco, botas veloces, anillo de riqueza, daga, hacha, bastón mágico, arco largo, libro de hechizos, espíritu, collar, guantes, capa, garra, lanza y shuriken. Cada nivel cuesta un 15% más; compra ×1, ×10, ×100 o Máx. Desde el casco cada pieza pide una misión (desde la daga: subir la pieza anterior a nivel 25). Se muestran las piezas disponibles y la siguiente bloqueada.
+  - **Mejoras**: "Llegan los moobs" y mejoras de hito (niveles 10, 50 y cada 50 hasta 500 de cada pieza, de bronce a divina) que dan +100% de producción, sumadas sobre la base.
   - **Misiones**: objetivos con recompensa en monedas o que desbloquean equipo.
   - **Configuración**: guías, partículas, barra superior, pausa con la tienda abierta y reinicio de progreso.
   - **Estadísticas**: monedas, moobs, acierto, rachas, saltos, distancia y tiempo de juego.
