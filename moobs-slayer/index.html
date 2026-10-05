@@ -20,6 +20,7 @@
   --f-body: "Atkinson Hyperlegible", system-ui, sans-serif;
   color-scheme: dark;
 }
+[hidden] { display: none !important; }
 html, body { background: var(--night); color: var(--ink); }
 body { font-family: var(--f-body); font-size: 15px; line-height: 1.5; padding: 20px 16px 40px; }
 .wrap { max-width: 980px; margin: 0 auto; display: grid; gap: 20px; }
@@ -37,6 +38,74 @@ button:active { transform: translateY(3px); box-shadow: 0 1px 0 #b06f1c; }
 button.alt { background: var(--mint); box-shadow: 0 4px 0 #2f9a7c; }
 button.ghost { background: var(--panel); color: var(--ink); box-shadow: 0 4px 0 var(--line); }
 .upgrades { display: grid; gap: 12px; }
+.shop-btn { position: absolute; right: 8px; bottom: 8px; display: flex; align-items: center; gap: 8px; font-size: clamp(13px, 2.4vw, 17px); padding: 8px 14px 8px 10px; }
+.shop-btn canvas { width: 24px; height: 24px; image-rendering: pixelated; }
+.shop-btn .badge { position: absolute; top: -5px; right: -5px; width: 14px; height: 14px; border-radius: 50%; background: var(--mint); border: 2px solid var(--night); animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 50% { transform: scale(1.25); } }
+.shop { position: absolute; top: 0; right: 0; bottom: 0; width: min(600px, 100%); box-sizing: border-box; background: rgba(21, 17, 31, .96); border-left: 3px solid var(--line); padding: 12px 14px; overflow-y: auto; display: grid; align-content: start; gap: 12px; }
+.asc-btn { right: auto; left: 8px; background: #b48cff; box-shadow: 0 4px 0 #6b4aa8; }
+.asc-btn:active { box-shadow: 0 1px 0 #6b4aa8; }
+.shop.asc { right: auto; left: 0; border-left: 0; border-right: 3px solid #6b4aa8; }
+.shop.asc .tab[aria-selected="true"] { box-shadow: inset 0 -3px 0 #b48cff; }
+.shop.asc .wallet { color: #d9c6ff; }
+button.ascbtn { background: #b48cff; box-shadow: 0 4px 0 #6b4aa8; justify-self: start; }
+button.ascbtn:active { box-shadow: 0 1px 0 #6b4aa8; }
+.asc-nums dd { font-size: 20px; }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+.two > div { background: var(--night); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+.two h3 { font-family: var(--f-display); font-size: 14px; margin: 0; }
+.two p { margin: 2px 0 0; color: var(--dim); font-size: 13px; }
+.node-cost { width: 42px; height: 42px; display: grid; place-content: center; text-align: center; background: #2a2045; border: 2px solid #6b4aa8; border-radius: 6px; line-height: 1; }
+.node-cost b { font-family: var(--f-display); font-size: 18px; color: #d9c6ff; }
+.node-cost span { font-size: 10px; color: var(--dim); }
+.node-cost.stone-a b { color: var(--ember); } .node-cost.stone-i b { color: var(--mint); }
+h3.sub { font-family: var(--f-display); font-size: 17px; margin: 6px 0 0; }
+@media (max-width: 520px) { .two { grid-template-columns: minmax(0, 1fr); } }
+.shop-head { display: flex; align-items: center; gap: 12px; }
+.shop-head h2 { font-size: 22px; margin-right: auto; }
+.wallet { font-family: var(--f-display); font-size: 18px; font-variant-numeric: tabular-nums; }
+.shop-close { background: var(--panel); color: var(--ink); box-shadow: 0 3px 0 var(--line); padding: 4px 10px; font-size: 16px; }
+.shop-list { display: grid; gap: 10px; }
+.tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 2px solid var(--line); }
+button.tab { position: relative; background: transparent; color: var(--dim); box-shadow: none; font-size: 14px; padding: 7px 9px; border-radius: 4px 4px 0 0; white-space: nowrap; }
+button.tab:active { transform: none; box-shadow: none; }
+button.tab[aria-selected="true"] { background: var(--panel); color: var(--ink); box-shadow: inset 0 -3px 0 var(--ember); }
+.tab .tdot { position: absolute; top: 5px; right: 2px; width: 7px; height: 7px; border-radius: 50%; background: var(--mint); }
+.panel { display: grid; gap: 10px; align-content: start; }
+.panel-note { margin: 0; color: var(--dim); font-size: 13px; }
+.upgrade .icon { width: 42px; height: 42px; image-rendering: pixelated; }
+.upgrade.locked { opacity: .5; }
+.lvl { font-family: var(--f-display); font-size: 13px; color: var(--night); background: var(--mint); border-radius: 3px; padding: 0 6px; margin-left: 6px; vertical-align: 2px; }
+.lvl.zero { background: var(--line); color: var(--dim); }
+.quest { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; align-items: center; background: var(--night); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; }
+.quest.claimed { opacity: .55; }
+.quest h3 { font-family: var(--f-body); font-size: 15px; font-weight: 700; margin: 0; }
+.quest .bar { grid-column: 1 / -1; height: 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.quest .bar i { display: block; height: 100%; background: var(--ember); }
+.quest.ready .bar i, .quest.claimed .bar i { background: var(--mint); }
+.quest .prog { color: var(--dim); font-size: 13px; font-variant-numeric: tabular-nums; }
+.quest button { font-size: 14px; padding: 6px 12px; }
+.cfg-list { display: grid; gap: 10px; }
+.savebox { display: grid; gap: 6px; border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; }
+.savebox h3 { font-family: var(--f-display); font-size: 16px; margin: 0; color: var(--mint); }
+.savebox p { margin: 0; color: var(--dim); font-size: 13px; }
+.savebox .save-state { color: var(--ink); }
+.savebox button { justify-self: start; font-size: 14px; }
+.toast { position: absolute; left: 50%; top: 40px; transform: translateX(-50%); font-family: var(--f-display); font-size: clamp(12px, 2.4vw, 16px); background: rgba(21, 17, 31, .9); color: var(--mint); border: 1px solid var(--mint); border-radius: 4px; padding: 4px 12px; pointer-events: none; transition: opacity .4s; }
+.danger { display: grid; gap: 6px; border: 1px dashed #ff7a8a; border-radius: 6px; padding: 10px 12px; }
+.danger h3 { font-family: var(--f-display); font-size: 16px; margin: 0; color: #ff7a8a; }
+.danger p { margin: 0; color: var(--dim); font-size: 13px; }
+.danger > button { justify-self: start; font-size: 14px; }
+.confirm { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; }
+.confirm button { font-size: 14px; padding: 6px 12px; }
+button.dangerbtn { background: #ff7a8a; box-shadow: 0 4px 0 #a33a4a; }
+.stats.life dd { font-size: 20px; }
+@media (max-width: 720px) {
+  .shop { position: fixed; inset: 0; width: 100%; z-index: 50; border: 0; padding: calc(12px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--night); }
+}
+.shop .upgrade { grid-template-columns: auto minmax(0, 1fr); }
+.shop .up-buy { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; }
+@media (prefers-reduced-motion: reduce) { .shop-btn .badge { animation: none; } }
 .upgrade { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; background: var(--night); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; }
 .upgrade.owned { border-color: var(--mint); }
 #upIcon { width: 42px; height: 42px; image-rendering: pixelated; }
@@ -112,7 +181,145 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
 
   <div class="stage">
     <canvas id="game" width="240" height="135" aria-label="Escenario: el héroe corriendo solo por una plataforma 2D"></canvas>
-    <div class="hud"><span id="hudName">Slayer</span> · Monedas <b id="hudCoins">0</b> <span id="hudMoobsWrap" hidden>· Moobs <b id="hudMoobs">0</b></span> · Estado: <b id="hudState">Corriendo</b></div>
+    <div class="hud"><span id="hudName">Slayer</span> · Monedas <b id="hudCoins">0</b> (<b id="hudCps">0</b>/s) <span id="hudMoobsWrap" hidden>· Moobs <b id="hudMoobs">0</b></span> · Estado: <b id="hudState">Corriendo</b></div>
+    <div class="toast" id="toast" hidden></div>
+    <button type="button" class="shop-btn" id="shopBtn" aria-expanded="false" aria-controls="shop">
+      <canvas id="shopIcon" width="12" height="12" aria-hidden="true"></canvas><span>Tienda</span>
+      <i class="badge" id="shopBadge" hidden title="Hay algo que puedes comprar"></i>
+    </button>
+    <button type="button" class="shop-btn asc-btn" id="ascBtn" aria-expanded="false" aria-controls="asc">
+      <canvas id="ascIcon" width="12" height="12" aria-hidden="true"></canvas><span>Ascensión</span>
+      <i class="badge" id="ascBadge" hidden title="Hay algo para hacer en la ascensión"></i>
+    </button>
+    <div class="shop asc" id="asc" role="dialog" aria-label="Ascensión" hidden>
+      <div class="shop-head">
+        <h2>Ascensión</h2>
+        <span class="wallet" title="Puntos Slayer disponibles"><b id="ascPS">0</b> PS</span>
+        <button type="button" class="shop-close" id="ascClose" aria-label="Cerrar ascensión">✕</button>
+      </div>
+      <div class="tabs" role="tablist" aria-label="Secciones de la ascensión">
+        <button type="button" class="tab atab" role="tab" id="atab-go" aria-controls="apanel-go" aria-selected="true">Ascender<i class="tdot" hidden></i></button>
+        <button type="button" class="tab atab" role="tab" id="atab-tree" aria-controls="apanel-tree" aria-selected="false">Árbol<i class="tdot" hidden></i></button>
+        <button type="button" class="tab atab" role="tab" id="atab-ultra" aria-controls="apanel-ultra" aria-selected="false">Ultra<i class="tdot" hidden></i></button>
+      </div>
+      <section class="panel" role="tabpanel" id="apanel-go" aria-labelledby="atab-go">
+        <dl class="stats asc-nums">
+          <div><dt>PS por ganar</dt><dd id="ascPending">0</dd></div>
+          <div><dt>Moobs en esta partida</dt><dd id="ascSouls">0</dd></div>
+          <div><dt>Próximo PS en</dt><dd id="ascNext">–</dd></div>
+          <div><dt>Bono de monedas/s</dt><dd><span id="ascBonus">+0%</span> → <span id="ascBonusAfter">+0%</span></dd></div>
+        </dl>
+        <p class="panel-note" id="ascTip"></p>
+        <div class="two">
+          <div><h3>Se reinicia</h3><p>Monedas, moobs, equipo, mejoras de hito y "Llegan los moobs".</p></div>
+          <div><h3>Se conserva</h3><p>Puntos Slayer, árbol, misiones, estadísticas y configuración.</p></div>
+        </div>
+        <button type="button" class="ascbtn" id="ascGo" disabled>Ascender</button>
+        <div class="confirm" id="ascConfirm" hidden>
+          <span>¿Ascender ahora? Empiezas de cero con tus PS.</span>
+          <button type="button" class="ascbtn" id="ascYes">Sí, ascender</button>
+          <button type="button" class="ghost" id="ascNo">Cancelar</button>
+        </div>
+      </section>
+      <section class="panel" role="tabpanel" id="apanel-tree" aria-labelledby="atab-tree" hidden>
+        <p class="panel-note">Mejoras permanentes pagadas con Puntos Slayer. Se mantienen al ascender; solo la ultra ascensión las borra.</p>
+        <div class="shop-list" id="treeList"></div>
+      </section>
+      <section class="panel" role="tabpanel" id="apanel-ultra" aria-labelledby="atab-ultra" hidden>
+        <p class="panel-note" id="ultraLocked">La ultra ascensión se desbloquea comprando «Puerta ultra» en el árbol (10 PS).</p>
+        <div id="ultraBox" class="panel" hidden>
+          <p class="panel-note">Un reinicio mayor: además de la partida, borra tus Puntos Slayer y el árbol. A cambio da Puntos Ultra Slayer (PUS) para las Piedras del Tiempo, que son permanentes.</p>
+          <dl class="stats asc-nums">
+            <div><dt>PUS por ganar</dt><dd id="ultraGain">0</dd></div>
+            <div><dt>PUS disponibles</dt><dd id="ultraPUS">0</dd></div>
+          </dl>
+          <button type="button" class="ascbtn" id="ultraGo">Ultra ascender</button>
+          <div class="confirm" id="ultraConfirm" hidden>
+            <span>¿Seguro? Pierdes tus PS y el árbol.</span>
+            <button type="button" class="ascbtn" id="ultraYes">Sí, ultra ascender</button>
+            <button type="button" class="ghost" id="ultraNo">Cancelar</button>
+          </div>
+        </div>
+        <div id="stonesBox" class="panel" hidden>
+          <h3 class="sub">Piedras del Tiempo</h3>
+          <article class="upgrade"><div class="node-cost stone-a"><b>◆</b></div>
+            <div class="up-body"><h3>Piedra de Actividad</h3><p id="stoneAct"></p></div>
+            <div class="up-buy"><button type="button" data-stone="act">+1 (1 PUS)</button></div></article>
+          <article class="upgrade"><div class="node-cost stone-i"><b>◆</b></div>
+            <div class="up-body"><h3>Piedra de Inactividad</h3><p id="stoneIdle"></p></div>
+            <div class="up-buy"><button type="button" data-stone="idle">+1 (1 PUS)</button></div></article>
+          <p class="panel-note">Cada punto rinde un poco menos que el anterior. Los jugadores del original reparten 4 en Actividad por 1 en Inactividad.</p>
+        </div>
+      </section>
+    </div>
+    <div class="shop" id="shop" role="dialog" aria-label="Tienda" hidden>
+      <div class="shop-head">
+        <h2>Tienda</h2>
+        <span class="wallet"><i class="dot moneda"></i><b id="shopCoins">0</b></span>
+        <button type="button" class="shop-close" id="shopClose" aria-label="Cerrar tienda">✕</button>
+      </div>
+      <div class="tabs" role="tablist" aria-label="Secciones de la tienda">
+        <button type="button" class="tab" role="tab" id="tab-equipo" aria-controls="panel-equipo" aria-selected="true">Equipamiento<i class="tdot" hidden></i></button>
+        <button type="button" class="tab" role="tab" id="tab-mejoras" aria-controls="panel-mejoras" aria-selected="false">Mejoras<i class="tdot" hidden></i></button>
+        <button type="button" class="tab" role="tab" id="tab-misiones" aria-controls="panel-misiones" aria-selected="false">Misiones<i class="tdot" hidden></i></button>
+        <button type="button" class="tab" role="tab" id="tab-config" aria-controls="panel-config" aria-selected="false">Configuración</button>
+        <button type="button" class="tab" role="tab" id="tab-stats" aria-controls="panel-stats" aria-selected="false">Estadísticas</button>
+      </div>
+      <section class="panel" role="tabpanel" id="panel-equipo" aria-labelledby="tab-equipo">
+        <p class="panel-note">Cada pieza produce monedas por segundo y cada nivel cuesta un 15% más. La siguiente pieza se desbloquea al comprar la anterior; desde el casco, además, hay que completar una misión.</p>
+        <div class="shop-list" id="equipList"></div>
+      </section>
+      <section class="panel" role="tabpanel" id="panel-mejoras" aria-labelledby="tab-mejoras" hidden>
+        <p class="panel-note">Compras únicas. Las de hito aparecen cuando una pieza llega a nivel 10, 50, 100, 150 y 200, y le dan +100% de producción.</p>
+        <div class="shop-list">
+          <article class="upgrade" id="upMoobs">
+        <canvas id="upIcon" width="14" height="14" aria-hidden="true"></canvas>
+        <div class="up-body">
+          <h3>Llegan los moobs</h3>
+          <p>Aparecen los moobs, los enemigos, en grupos de 1 a 3 y a cualquier altura. Derrótalos tocándolos o con el ataque: son las almas que se convierten en Puntos Slayer al ascender.</p>
+          <p class="up-state" id="upState"></p>
+        </div>
+        <div class="up-buy">
+          <span class="price"><i class="dot moneda"></i>10</span>
+          <button type="button" id="buyMoobs" disabled>Comprar</button>
+        </div>
+      </article>
+          <p class="panel-note" id="msHint"></p>
+          <div class="shop-list" id="milestoneList"></div>
+        </div>
+      </section>
+      <section class="panel" role="tabpanel" id="panel-misiones" aria-labelledby="tab-misiones" hidden>
+        <p class="panel-note">Cumple el objetivo y reclama la recompensa: monedas o una nueva pieza de equipo.</p>
+        <div class="shop-list" id="questList"></div>
+      </section>
+      <section class="panel" role="tabpanel" id="panel-config" aria-labelledby="tab-config" hidden>
+        <div class="cfg-list">
+          <label class="check" for="cfgGuides"><input id="cfgGuides" type="checkbox" checked> Guías de altura y flecha del próximo grupo</label>
+          <label class="check" for="cfgParticles"><input id="cfgParticles" type="checkbox" checked> Partículas y destellos</label>
+          <label class="check" for="cfgHud"><input id="cfgHud" type="checkbox" checked> Barra superior con monedas y estado</label>
+          <label class="check" for="cfgPause"><input id="cfgPause" type="checkbox"> Pausar el juego mientras la tienda o la ascensión están abiertas</label>
+        </div>
+        <div class="savebox">
+          <h3>Partida guardada</h3>
+          <p>El progreso se guarda solo cada 5 segundos, al comprar o reclamar y al cerrar la página. Se carga automáticamente la próxima vez que abras el juego en este navegador.</p>
+          <p class="save-state" id="saveState">Aún no se ha guardado.</p>
+          <button type="button" class="ghost" id="saveNow">Guardar ahora</button>
+        </div>
+        <div class="danger">
+          <h3>Reiniciar progreso</h3>
+          <p>Vuelve a cero las monedas, los moobs, el equipo, las mejoras, las misiones, la ascensión y las estadísticas.</p>
+          <button type="button" class="ghost" id="resetAsk">Reiniciar progreso</button>
+          <div class="confirm" id="resetConfirm" hidden>
+            <span>¿Seguro? No se puede deshacer.</span>
+            <button type="button" class="dangerbtn" id="resetYes">Sí, reiniciar</button>
+            <button type="button" class="ghost" id="resetNo">Cancelar</button>
+          </div>
+        </div>
+      </section>
+      <section class="panel" role="tabpanel" id="panel-stats" aria-labelledby="tab-stats" hidden>
+        <dl class="stats life" id="lifeStats"></dl>
+      </section>
+    </div>
   </div>
 
   <div class="controls">
@@ -123,7 +330,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
       <span class="dev-tag">DEV</span>
       <button id="btnAerial" type="button" class="devbtn">Ataque en altura</button>
     </div>
-    <span class="keys"><kbd>Espacio</kbd> saltar · <kbd>J</kbd> atacar · <kbd>K</kbd> ataque en altura · <kbd>P</kbd> correr/detener</span>
+    <span class="keys"><kbd>Espacio</kbd> saltar · <kbd>J</kbd> atacar · <kbd>K</kbd> ataque en altura · <kbd>P</kbd> correr/detener · <kbd>T</kbd> tienda · <kbd>Y</kbd> ascensión</span>
   </div>
 
   <div class="grid">
@@ -149,41 +356,34 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     <section class="card">
       <h2>Ficha <small>valores base, se usarán en la jugabilidad</small></h2>
       <dl class="stats">
-        <div><dt>Vida</dt><dd>100</dd></div>
-        <div><dt>Ataque</dt><dd>10</dd></div>
-        <div><dt>Velocidad</dt><dd>1.0×</dd></div>
+        <div><dt>Vida</dt><dd id="statVida">100</dd></div>
+        <div><dt>Ataque</dt><dd id="statAtk">10</dd></div>
+        <div><dt>Velocidad</dt><dd id="statVel">1.00×</dd></div>
         <div><dt>Moobs</dt><dd id="statMoobs">0</dd></div>
         <div><dt>Monedas</dt><dd id="statCoins">0</dd></div>
-        <div><dt>Nivel</dt><dd>1</dd></div>
+        <div><dt>Monedas/s</dt><dd id="statCps">0</dd></div>
+        <div><dt>Puntos Slayer</dt><dd id="statPS">0</dd></div>
+        <div><dt>Ascensiones</dt><dd id="statAsc">0</dd></div>
       </dl>
       <h2>Próximas fases</h2>
       <ol class="roadmap">
         <li class="done">Personaje: diseño y animaciones</li>
         <li class="now">Recoger moobs y monedas (en pruebas)</li>
         <li>Enemigos y combate automático</li>
-        <li>Tienda de equipo y progreso</li>
+        <li class="now">Tienda: equipo, mejoras, misiones, configuración y estadísticas (en pruebas)</li>
       </ol>
     </section>
   </div>
 
   <section class="card">
-    <h2>Mejoras <small>se compran con monedas</small></h2>
+    <h2>Mejoras <small>herramientas de desarrollo; la compra está en la Tienda</small></h2>
     <div class="upgrades">
-      <article class="upgrade" id="upMoobs">
-        <canvas id="upIcon" width="14" height="14" aria-hidden="true"></canvas>
-        <div class="up-body">
-          <h3>Llegan los moobs</h3>
-          <p>Desbloquea los moobs. Empiezan a aparecer junto a las monedas, en grupos de 1 a 3 y a cualquier altura.</p>
-          <p class="up-state" id="upState"></p>
-        </div>
-        <div class="up-buy">
-          <span class="price"><i class="dot moneda"></i>10</span>
-          <button type="button" id="buyMoobs" disabled>Comprar</button>
-        </div>
-      </article>
       <div class="dev">
         <span class="dev-tag">DEV</span>
         <button type="button" class="devbtn" id="devCoins">+10 monedas</button>
+        <button type="button" class="devbtn" id="devCoinsBig">+10 K monedas</button>
+        <button type="button" class="devbtn" id="devSouls">+20 moobs</button>
+        <button type="button" class="devbtn" id="devPS">+5 PS</button>
         <button type="button" class="devbtn" id="devUnlock">Desbloquear gratis</button>
         <button type="button" class="devbtn" id="devLock" hidden>Bloquear de nuevo</button>
       </div>
@@ -431,8 +631,8 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   const hero = { running: true, y: 0, vy: 0, air: false, atkT: -1, animT: 0, aerial: false, pendingAerial: false };
   let scroll = 0, dust = [];
 
-  function jump() { if (!hero.air) { hero.vy = -215; hero.air = true; for (let i = 0; i < 5; i++) dust.push({ x: HERO_X + rnd(i + scroll) * 8 - 4, y: GROUND, vx: -20 - rnd(i) * 30, vy: -10 - rnd(i * 3) * 20, life: .5 }); } }
-  function attack() { if (hero.atkT < 0) { hero.atkT = 0; hero.aerial = false; } }
+  function jump() { if (!hero.air) { life.jumps++; hero.vy = -215; hero.air = true; for (let i = 0; i < 5; i++) dust.push({ x: HERO_X + rnd(i + scroll) * 8 - 4, y: GROUND, vx: -20 - rnd(i) * 30, vy: -10 - rnd(i * 3) * 20, life: .5 }); } }
+  function attack() { if (hero.atkT < 0) { life.attacks++; hero.atkT = 0; hero.aerial = false; } }
   // DEV: salta y lanza el corte cerca del punto más alto; este corte sí recoge moobs
   function aerialAttack() {
     if (hero.atkT >= 0) return;
@@ -502,23 +702,35 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     for (const i of mark) { d[i*4] = OUTLINE[0]; d[i*4+1] = OUTLINE[1]; d[i*4+2] = OUTLINE[2]; d[i*4+3] = 255; }
     c.putImageData(img, 0, 0);
   }
-  [1, .7, .3, .7].forEach(k => {
+  // moob: enemigo tipo slime; los que van por el aire tienen alas
+  const moobFlyFrames = [];
+  function moobSprite(f, wings) {
     const cv = document.createElement('canvas'); cv.width = cv.height = 14;
     const c = cv.getContext('2d');
-    for (let y = 0; y < 10; y++) {
-      const hw = Math.max(.6, Math.sqrt(Math.max(0, 25 - (y - 4.5) ** 2)) * k);
-      const x0 = Math.round(7 - hw), x1 = Math.round(7 + hw), w = Math.max(1, x1 - x0);
-      c.fillStyle = '#f2c14e'; c.fillRect(x0, y + 2, w, 1);
-      c.fillStyle = '#c4862a'; c.fillRect(x0 + w - 1, y + 2, 1, 1);
-      if (y > 0 && y < 6 && k > .5) { c.fillStyle = '#fff1a8'; c.fillRect(x0 + 1, y + 2, 1, 1); }
+    const sq = [[10, 8], [11, 7], [10, 8], [9, 9]][f], w = sq[0], h = sq[1];
+    for (let y = 0; y < h; y++) {
+      const t = (y + .5 - h / 2) / (h / 2), hw = Math.max(1, Math.round(Math.sqrt(Math.max(0, 1 - t * t)) * w / 2 + (y > h / 2 ? .5 : 0)));
+      const yy = 13 - h + y;
+      c.fillStyle = '#c74fd8'; c.fillRect(7 - hw, yy, hw * 2, 1);
+      c.fillStyle = '#8a2d9e'; c.fillRect(7 + hw - 1, yy, 1, 1);
+      if (y === h - 1) { c.fillStyle = '#8a2d9e'; c.fillRect(7 - hw, yy, hw * 2, 1); }
     }
-    if (k === 1) {
-      c.fillStyle = '#8a4b12';
-      ['10001', '11011', '10101', '10001', '10001'].forEach((r, ry) => [...r].forEach((ch, rx) => { if (ch === '1') c.fillRect(5 + rx, 5 + ry, 1, 1); }));
+    const top = 13 - h;
+    c.fillStyle = '#e48bf0'; c.fillRect(4, top + 1, 2, 1);
+    c.fillStyle = '#ffffff'; c.fillRect(4, top + 3, 2, 2); c.fillRect(8, top + 3, 2, 2);
+    c.fillStyle = '#1a1423'; c.fillRect(5, top + 4, 1, 1); c.fillRect(9, top + 4, 1, 1);
+    c.fillRect(4, top + 2, 2, 1); c.fillRect(8, top + 2, 2, 1); // cejas enojadas
+    c.fillRect(6, top + 6, 2, 1);
+    if (wings) {
+      const up = f % 2 === 0;
+      c.fillStyle = '#efe9ff';
+      if (up) { c.fillRect(0, top, 2, 1); c.fillRect(1, top + 1, 2, 1); c.fillRect(12, top, 2, 1); c.fillRect(11, top + 1, 2, 1); }
+      else { c.fillRect(0, top + 4, 2, 1); c.fillRect(1, top + 3, 2, 1); c.fillRect(12, top + 4, 2, 1); c.fillRect(11, top + 3, 2, 1); }
     }
     outline(c, 14);
-    moobFrames.push(cv);
-  });
+    return cv;
+  }
+  for (let f = 0; f < 4; f++) { moobFrames.push(moobSprite(f, false)); moobFlyFrames.push(moobSprite(f, true)); }
 
   // moneda: plateada, más pequeña, con un rombo
   const coinFrames = [];
@@ -540,7 +752,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   const HEIGHTS = { bajo: 9, medio: 30, alto: 46 };
   const HCOL = { bajo: '#6fe3c1', medio: '#ffb347', alto: '#ff8fb8' };
   const ITEM = {
-    moob:   { name: 'moob',   plural: 'moobs',   frames: moobFrames, glow: 'rgba(255,213,120,.2)', spark: '255,225,140', text: '#ffe08a' },
+    moob:   { name: 'moob',   plural: 'moobs',   frames: moobFrames, glow: 'rgba(199,79,216,.18)', spark: '228,139,240', text: '#f0b6ff' },
     moneda: { name: 'moneda', plural: 'monedas', frames: coinFrames, glow: 'rgba(200,220,255,.18)', spark: '220,232,255', text: '#e6eefc' },
   };
   // Regla: las monedas siempre van por encima del piso; los moobs pueden ir a cualquier altura.
@@ -552,7 +764,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   // Cada patrón devuelve el próximo grupo: { type, count, hk, gap }.
   // Para mejorar los patrones más adelante basta con agregar una entrada aquí.
   const PATTERNS = {
-    grupos:    () => { const type = pickType(); return { type, count: randInt(1, 3), hk: pick(ALLOWED[type]), gap: randInt(30, 120) }; },
+    grupos:    () => { const type = pickType(); return { type, count: randInt(1, has('grupos4') ? 4 : 3), hk: pick(ALLOWED[type]), gap: randInt(30, 120) }; },
     fijo:      () => { const type = pickType(); return { type, count: 1, hk: ALLOWED[type][0], gap: 60 }; },
     alterno:   () => { altHigh = !altHigh; const type = pickType(); return { type, count: 1, hk: altHigh ? ALLOWED[type][0] : 'alto', gap: 80 }; },
     aleatorio: () => { const type = pickType(); return { type, count: 1, hk: pick(ALLOWED[type]), gap: randInt(20, 160) }; },
@@ -565,26 +777,192 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   function buyMoobs(free) {
     const u = UPGRADES.moobs;
     if (u.owned) return;
-    if (!free) { if (wallet.moneda < u.cost) return; wallet.moneda -= u.cost; }
-    u.owned = true;
-    renderStats();
+    if (!free) { if (wallet.moneda < u.cost) return; wallet.moneda -= u.cost; life.spent += u.cost; }
+    u.owned = true; life.moobsUnlocked = 1;
+    renderStats(); saveGame();
   }
   function lockMoobs() { UPGRADES.moobs.owned = false; wallet.moob = 0; renderStats(); }
+  function renderShopBits() {
+    const u = UPGRADES.moobs;
+    document.getElementById('shopCoins').textContent = fmt(wallet.moneda);
+  }
   function renderUpgrade() {
+    renderShopBits();
     const u = UPGRADES.moobs, btn = document.getElementById('buyMoobs'), st = document.getElementById('upState'), card = document.getElementById('upMoobs');
     card.classList.toggle('owned', u.owned);
     if (u.owned) { btn.hidden = true; st.textContent = 'Comprada: los moobs ya están apareciendo.'; }
     else {
       btn.hidden = false;
-      const falta = u.cost - wallet.moneda;
+      const falta = Math.ceil(u.cost - wallet.moneda);
       btn.disabled = falta > 0;
-      st.textContent = falta > 0 ? `Te faltan ${falta} ${falta === 1 ? 'moneda' : 'monedas'}.` : '¡Ya te alcanza!';
+      st.textContent = falta > 0 ? `Te faltan ${fmt(falta)} ${plural(falta)}.` : '¡Ya te alcanza!';
     }
     document.getElementById('devUnlock').hidden = u.owned;
     document.getElementById('devLock').hidden = !u.owned;
   }
 
-  const cfg = { pattern: 'grupos', delay: 1, guides: true };
+  const cfg = { pattern: 'grupos', delay: 1, guides: true, particles: true, pauseShop: false, hud: true };
+
+  // ---------- equipamiento ----------
+  // Modelo Idle Slayer: cada pieza produce monedas por segundo (CpS) según su nivel.
+  // Costos base y CpS tomados de las primeras piezas del Idle Slayer original.
+  const COST_MULT = 1.15; // el original no publica su multiplicador; 1.15 es el valor que usamos
+  const EQUIP = [
+    { id: 'espada',   name: 'Espada',            base: 6,       cps: 0.1,  bonus: '+2 de ataque por nivel',
+      map: ['........Ks', '.......Kss', '......Kss.', '.....Kss..', '..g.Kss...', '...gss....', '...bg.....', '..b..g....', '.b........', 'b.........'] },
+    { id: 'escudo',   name: 'Escudo',            base: 50,      cps: 1,    bonus: '+10 de vida por nivel',
+      map: ['..KKKKKK..', '.KBBBBBBK.', '.KBggggBK.', '.KBgBBgBK.', '.KBggggBK.', '.KBBBBBBK.', '..KBBBBK..', '...KBBK...', '....KK....', '..........'] },
+    { id: 'armadura', name: 'Armadura',          base: 750,     cps: 8,    bonus: '+15 de vida por nivel',
+      map: ['.KK....KK.', 'KSSK..KSSK', 'KSsSKKSsSK', '.KSssssSK.', '.KSsSSsSK.', '.KSssssSK.', '.KSggggSK.', '.KSssssSK.', '..KKKKKK..', '..........'] },
+    { id: 'casco',    name: 'Casco',             base: 16000,   cps: 47,   bonus: '+5 de vida por nivel', quest: 'u_casco',
+      map: ['...KKKK...', '..KSssSK..', '.KSssssSK.', '.KSssssSK.', '.KSKKKKSK.', '.KSK..KSK.', '.KSK..KSK.', '..KK..KK..', '..........', '..........'] },
+    { id: 'botas',    name: 'Botas veloces',     base: 120000,  cps: 500,  bonus: '+1% de velocidad por nivel (máx. +100%)', quest: 'u_botas',
+      map: ['..........', '...KKKK...', '...KbbK...', '...KbbK...', '...KbbK...', '...KbbbKK.', '..KbbbbbbK', '..KGGGGGGK', '...KKKKKK.', '..........'] },
+    { id: 'anillo',   name: 'Anillo de riqueza', base: 1200000, cps: 4000, bonus: '+1% de moneda doble por nivel (máx. 100%)', quest: 'u_anillo',
+      map: ['....pp....', '...pwpp...', '....pp....', '...KggK...', '..Kg..gK..', '.Kg....gK.', '.Kg....gK.', '..Kg..gK..', '...KggK...', '..........'] },
+  ];
+  EQUIP.forEach(e => { e.lv = 0; });
+  const ICOL = { K: '#1a1423', s: '#dfeaf5', S: '#8a9bb0', g: '#f2c14e', G: '#c4862a', b: '#6b4a2e', B: '#3b4a8c', p: '#b48cff', w: '#ffffff' };
+  const eqCost = e => Math.ceil(e.base * Math.pow(COST_MULT, e.lv));
+  const lvOf = id => EQUIP.find(e => e.id === id).lv;
+  function lockReason(i) {
+    const e = EQUIP[i];
+    if (i > 0 && EQUIP[i - 1].lv < 1) return `Se desbloquea al comprar ${EQUIP[i - 1].name.toLowerCase()}.`;
+    if (e.quest && !claimed.has(e.quest)) return `Completa la misión «${QUESTS.find(q => q.id === e.quest).text}».`;
+    return '';
+  }
+  const eqUnlocked = i => !lockReason(i);
+
+  // Hitos: en los niveles 10, 50, 100, 150 y 200 de cada pieza aparece una mejora que le da +100%.
+  // Como en el original, los +100% se suman sobre la base (no se multiplican entre sí).
+  const MILESTONES = [10, 50, 100, 150, 200];
+  const TIERS = ['de bronce', 'de plata', 'de oro', 'de platino', 'de diamante'];
+  const eqUps = new Set(); // ids "espada@10"
+  const msCost = (e, m) => Math.ceil(e.base * Math.pow(COST_MULT, m) * 5);
+  const pieceMult = e => 1 + MILESTONES.filter(m => eqUps.has(`${e.id}@${m}`)).length;
+  const pieceCps = e => e.cps * e.lv * pieceMult(e);
+  const totalCps = () => EQUIP.reduce((s, e) => s + pieceCps(e), 0) * prestigeMult();
+  function buyMilestone(key) {
+    const [id, m] = key.split('@'), e = EQUIP.find(x => x.id === id), lvl = +m;
+    if (!e || eqUps.has(key) || e.lv < lvl) return;
+    const c = msCost(e, lvl);
+    if (wallet.moneda < c) return;
+    wallet.moneda -= c; life.spent += c; eqUps.add(key);
+    renderStats(); saveGame();
+  }
+
+  function derived() {
+    return {
+      atk: 10 + 2 * lvOf('espada'),
+      vida: 100 + 10 * lvOf('escudo') + 15 * lvOf('armadura') + 5 * lvOf('casco'),
+      speed: (1 + Math.min(1, .01 * lvOf('botas'))) * (has('botasA') ? 1.1 : 1),
+      double: Math.min(1, .01 * lvOf('anillo')),
+    };
+  }
+  function buyEquip(id) {
+    const i = EQUIP.findIndex(e => e.id === id), e = EQUIP[i];
+    if (!eqUnlocked(i)) return;
+    const c = eqCost(e);
+    if (wallet.moneda < c) return;
+    wallet.moneda -= c; life.spent += c; e.lv++; life.equipBought++;
+    renderStats(); saveGame();
+  }
+  function iconURL(map) {
+    const cv = document.createElement('canvas'); cv.width = cv.height = 12;
+    const c = cv.getContext('2d');
+    map.forEach((r, y) => [...r].forEach((ch, x) => { if (ICOL[ch]) { c.fillStyle = ICOL[ch]; c.fillRect(x + 1, y + 1, 1, 1); } }));
+    return cv.toDataURL();
+  }
+  EQUIP.forEach(e => { e.icon = iconURL(e.map); });
+
+  // ---------- ascensión ----------
+  // Modelo Idle Slayer: los moobs derrotados son las "almas". Se convierten en Puntos Slayer (PS) al ascender.
+  // Cada PS cuesta 4 moobs más que el anterior; cada PS ganado da +1% de monedas por segundo para siempre.
+  const asc = { psAvail: 0, psTotal: 0, nodes: new Set(), count: 0, usp: 0, uspTotal: 0, ultras: 0, stones: { act: 0, idle: 0 } };
+  const has = id => asc.nodes.has(id);
+  const psCost = n => 5 + 4 * n;
+  function pendingPS() {
+    let n = asc.psTotal, souls = Math.floor(wallet.moob), k = 0;
+    while (souls >= psCost(n + k)) { souls -= psCost(n + k); k++; }
+    return { k, next: psCost(n + k) - souls };
+  }
+  const prestigeMult = () => (1 + .01 * asc.psTotal) * (has('cinturon') ? 1.25 : 1);
+  const stoneBonus = n => 1 - Math.pow(.9, n); // rendimiento decreciente, máximo 100%
+  const actBonus = () => stoneBonus(asc.stones.act);
+  const offlineRate = () => .10 + .5 * stoneBonus(asc.stones.idle);
+  const TREE = [
+    { id: 'cinturon',    name: 'Cinturón de poder',  cost: 1,  desc: '+25% de monedas por segundo.' },
+    { id: 'cazador',     name: 'Cazador nato',       cost: 2,  desc: 'Los moobs aparecen desde el inicio de cada partida, sin comprar la mejora.' },
+    { id: 'botasA',      name: 'Botas aladas',       cost: 2,  desc: '+10% de velocidad del mundo.' },
+    { id: 'reinversion', name: 'Reinversión',        cost: 3,  desc: 'Cada moneda recogida vale además el 10% de tus monedas por segundo.' },
+    { id: 'almas',       name: 'Segador de almas',   cost: 4,  desc: '25% de probabilidad de que un moob derrotado cuente doble.' },
+    { id: 'grupos4',     name: 'Hordas',             cost: 5,  desc: 'Los grupos pueden traer hasta 4 monedas o moobs.' },
+    { id: 'herencia',    name: 'Herencia',           cost: 6,  desc: 'Conservas el 10% de tus monedas al ascender.' },
+    { id: 'ultra',       name: 'Puerta ultra',       cost: 10, desc: 'Desbloquea la ultra ascensión.' },
+  ];
+  function buyNode(id) {
+    const n = TREE.find(x => x.id === id);
+    if (!n || has(id) || asc.psAvail < n.cost) return;
+    asc.psAvail -= n.cost; asc.nodes.add(id);
+    if (id === 'cazador') UPGRADES.moobs.owned = true;
+    renderStats(); saveGame();
+  }
+  function resetRun() {
+    wallet.moneda = has('herencia') ? wallet.moneda * .1 : 0;
+    wallet.moob = 0;
+    EQUIP.forEach(e => { e.lv = 0; }); eqUps.clear();
+    UPGRADES.moobs.owned = has('cazador');
+    items = []; group = null; waitT = .6; altHigh = false;
+  }
+  function ascend() {
+    const p = pendingPS();
+    if (p.k < 1) return;
+    asc.psTotal += p.k; asc.psAvail += p.k; asc.count++;
+    resetRun();
+    renderStats(); saveGame(); setAsc(false); toast(`Ascendiste: +${p.k} PS`);
+  }
+  const ultraGain = () => Math.floor(Math.sqrt(asc.psTotal + pendingPS().k));
+  function ultraAscend() {
+    const gain = ultraGain();
+    if (!has('ultra') || gain < 1) return;
+    asc.usp += gain; asc.uspTotal += gain; asc.ultras++;
+    asc.psTotal = 0; asc.psAvail = 0; asc.nodes.clear();
+    resetRun();
+    renderStats(); saveGame(); toast(`Ultra ascensión: +${gain} PUS`);
+  }
+  function buyStone(kind) {
+    if (asc.usp < 1) return;
+    asc.usp--; asc.stones[kind]++;
+    renderStats(); saveGame();
+  }
+
+  // ---------- misiones ----------
+  // reward: monedas; unlock: pieza de equipo que la misión desbloquea (como en el original, desde el casco).
+  const QUESTS = [
+    { id: 'q1',       text: 'Recoge 10 monedas',                     prog: () => life.coins,         goal: 10, reward: 5 },
+    { id: 'q2',       text: 'Salta 15 veces',                        prog: () => life.jumps,         goal: 15, reward: 5 },
+    { id: 'q3',       text: 'Compra tu primera pieza de equipo',     prog: () => life.equipBought,   goal: 1,  reward: 5 },
+    { id: 'q4',       text: 'Completa 3 grupos sin perder ninguno',  prog: () => life.perfect,       goal: 3,  reward: 8 },
+    { id: 'q5',       text: 'Desbloquea los moobs',                  prog: () => life.moobsUnlocked, goal: 1,  reward: 10 },
+    { id: 'q6',       text: 'Derrota 10 moobs',                      prog: () => life.moobs,         goal: 10, reward: 15 },
+    { id: 'u_casco',  text: 'Sube la armadura a nivel 10',           prog: () => lvOf('armadura'),   goal: 10, unlock: 'casco' },
+    { id: 'u_botas',  text: 'Completa 25 grupos sin perder ninguno', prog: () => life.perfect,       goal: 25, unlock: 'botas' },
+    { id: 'u_anillo', text: 'Derrota 50 moobs',                      prog: () => life.moobs,         goal: 50, unlock: 'anillo' },
+  ];
+  const claimed = new Set();
+  const questReady = q => !claimed.has(q.id) && q.prog() >= q.goal;
+  function claimQuest(id) {
+    const q = QUESTS.find(x => x.id === id);
+    if (!q || !questReady(q)) return;
+    claimed.add(id);
+    if (q.reward) wallet.moneda += q.reward;
+    renderStats(); saveGame();
+  }
+
+  // ---------- estadísticas de por vida ----------
+  const freshLife = () => ({ passive: 0, coins: 0, moobs: 0, jumps: 0, attacks: 0, perfect: 0, groups: 0, streak: 0, bestStreak: 0, equipBought: 0, moobsUnlocked: 0, spent: 0, dist: 0, time: 0 });
+  let life = freshLife();
+
   let items = [], group = null, waitT = .6, altHigh = false, clock = 0, fx = [];
   const wallet = { moob: 0, moneda: 0 };
   const stats = { got: 0, miss: 0, n: 0, log: [] };
@@ -602,22 +980,32 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   function itemY(it) { return GROUND - HEIGHTS[group.hk] + Math.sin(clock * 4 + it.ph) * 1.5; }
   function resolve(it, result, sx, cy) {
     it.alive = false;
-    if (result === 'miss') { group.miss++; stats.miss++; }
+    if (result === 'miss') { group.miss++; stats.miss++; stats.lifeMiss = (stats.lifeMiss || 0) + 1; }
     else {
-      group.got++; stats.got++; wallet[group.type]++;
+      let amt = 1;
+      if (group.type === 'moneda') {
+        if (has('reinversion')) amt += .1 * totalCps();
+        if (Math.random() < derived().double) amt *= 2;
+      } else if (has('almas') && Math.random() < .25) amt = 2;
+      amt *= 1 + actBonus();
+      group.got++; stats.got++; wallet[group.type] += amt;
+      if (group.type === 'moneda') life.coins += amt; else life.moobs += amt;
       if (result === 'atk') group.air++;
       const T = ITEM[group.type];
       for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; fx.push({ x: sx, y: cy, vx: Math.cos(a) * 40, vy: Math.sin(a) * 40, life: .4, kind: 'spark', col: T.spark }); }
-      fx.push({ x: sx, y: cy - 6, vx: 0, vy: -22, life: .7, kind: 'text', col: T.text });
+      fx.push({ x: sx, y: cy - 6, vx: 0, vy: -22, life: .7, kind: 'text', col: T.text, val: '+' + fmtCps(amt) });
     }
-    if (items.every(i => !i.alive)) { group.done = true; items = []; waitT = cfg.delay; }
+    if (items.every(i => !i.alive)) {
+      group.done = true; items = []; waitT = cfg.delay; life.groups++;
+      if (group.miss === 0) { life.perfect++; life.streak++; life.bestStreak = Math.max(life.bestStreak, life.streak); } else life.streak = 0;
+    }
     renderStats();
   }
   function updateMoob(dt) {
     if (!items.length) { waitT -= dt; if (waitT <= 0) spawnGroup(); return; }
     const top = GROUND - 22 + hero.y, bot = GROUND + hero.y;
     let slash = null;
-    if (hero.aerial && hero.atkT >= 0) {
+    if (hero.atkT >= 0 && (group.type === 'moob' || hero.aerial)) {
       const af = Math.floor(hero.atkT * ANIMS.attack.fps);
       if (af === 2 || af === 3) slash = { x: HERO_X - 1, y: GROUND - 11 + hero.y };
     }
@@ -650,7 +1038,8 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
       const sx = it.wx - scroll, cy = itemY(it);
       if (sx > W + 7) { arrow = true; continue; }
       g.fillStyle = T.glow; g.beginPath(); g.arc(sx, cy, group.type === 'moob' ? 9 : 7, 0, Math.PI * 2); g.fill();
-      g.drawImage(T.frames[Math.floor(clock * 8 + it.ph * 2) % 4], Math.round(sx - 7), Math.round(cy - 7));
+      const frames = group.type === 'moob' && group.hk !== 'bajo' ? moobFlyFrames : T.frames;
+      g.drawImage(frames[Math.floor(clock * 8 + it.ph * 2) % 4], Math.round(sx - 7), Math.round(cy - 7));
     }
     if (arrow && cfg.guides) {
       const y = Math.round(GROUND - HEIGHTS[group.hk]);
@@ -663,16 +1052,17 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     for (const p of fx) {
       p.x += p.vx * dt; p.y += p.vy * dt;
       if (p.kind === 'spark') { p.vx *= .9; p.vy *= .9; g.fillStyle = `rgba(${p.col},${Math.min(1, p.life * 3)})`; g.fillRect(p.x | 0, p.y | 0, 2, 2); }
-      else { g.globalAlpha = Math.min(1, p.life * 2); g.font = '700 10px "Pixelify Sans", monospace'; g.textAlign = 'center'; g.fillStyle = '#1a1423'; g.fillText('+1', (p.x | 0) + 1, (p.y | 0) + 1); g.fillStyle = p.col; g.fillText('+1', p.x | 0, p.y | 0); g.globalAlpha = 1; g.textAlign = 'start'; }
+      else { g.globalAlpha = Math.min(1, p.life * 2); g.font = '700 10px "Pixelify Sans", monospace'; g.textAlign = 'center'; g.fillStyle = '#1a1423'; g.fillText(p.val, (p.x | 0) + 1, (p.y | 0) + 1); g.fillStyle = p.col; g.fillText(p.val, p.x | 0, p.y | 0); g.globalAlpha = 1; g.textAlign = 'start'; }
     }
   }
   function renderStats() {
     const set = (id, v) => { document.getElementById(id).textContent = v; };
     const mo = UPGRADES.moobs.owned;
-    set('hudMoobs', mo ? wallet.moob : '🔒'); set('hudCoins', wallet.moneda);
+    set('hudMoobs', mo ? nf(wallet.moob) : '🔒'); set('hudCoins', fmt(wallet.moneda));
     document.getElementById('hudMoobsWrap').hidden = !mo;
-    set('statMoobs', mo ? wallet.moob : 'Bloqueado');
-    renderUpgrade(); set('statCoins', wallet.moneda);
+    set('statMoobs', mo ? nf(wallet.moob) : 'Bloqueado');
+    renderUpgrade(); set('statCoins', fmt(wallet.moneda));
+    renderShop();
     set('sGot', stats.got); set('sMiss', stats.miss);
     const tot = stats.got + stats.miss;
     set('sRate', tot ? Math.round(stats.got / tot * 100) + '%' : '–');
@@ -681,9 +1071,185 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
       const T = ITEM[e.type];
       let res, cls;
       if (!e.done) { res = 'En camino'; cls = 'wait'; }
-      else { res = `${e.got}/${e.count}` + (e.air ? ` · ${e.air} aéreo` : ''); cls = e.got === e.count ? 'ok' : e.got ? 'part' : 'miss'; }
+      else { res = `${e.got}/${e.count}` + (e.air ? ` · ${e.air} con ataque` : ''); cls = e.got === e.count ? 'ok' : e.got ? 'part' : 'miss'; }
       return `<li><span class="n">#${e.n}</span><span class="pill ${e.hk}">${e.hk}</span><span class="what"><i class="dot ${e.type}"></i>${e.count} ${e.count > 1 ? T.plural : T.name}</span><span class="res ${cls}">${res}</span></li>`;
     }).join('') : '<li class="empty" style="display:block">Aún no aparece ningún grupo.</li>';
+  }
+  const nf = n => Math.floor(n).toLocaleString('es-CO');
+  // Números grandes al estilo idle: 12.5 K, 3.40 M, 1.20 B, 7.00 T…
+  const SUFFIX = [[1e15, 'Qa'], [1e12, 'T'], [1e9, 'B'], [1e6, 'M'], [1e3, 'K']];
+  function fmt(n) {
+    n = Math.floor(n);
+    if (n < 10000) return n.toLocaleString('es-CO');
+    for (const [v, s] of SUFFIX) if (n >= v) { const x = n / v; return (x >= 100 ? x.toFixed(0) : x >= 10 ? x.toFixed(1) : x.toFixed(2)) + ' ' + s; }
+    return String(n);
+  }
+  const fmtCps = n => n < 100 ? (Math.round(n * 10) / 10).toLocaleString('es-CO') : fmt(n);
+  const plural = n => (Math.ceil(n) === 1 ? 'moneda' : 'monedas');
+
+  // Las listas se arman una vez y luego solo se actualizan sus textos, así los botones no se pierden al hacer clic.
+  const built = {};
+  function renderShop() {
+    const d = derived(), cps = totalCps(), money = wallet.moneda;
+    document.getElementById('statVida').textContent = d.vida;
+    document.getElementById('statAtk').textContent = d.atk;
+    document.getElementById('statVel').textContent = d.speed.toFixed(2) + '×';
+    document.getElementById('statCps').textContent = fmtCps(cps);
+    document.getElementById('hudCps').textContent = fmtCps(cps);
+    document.getElementById('statPS').textContent = nf(asc.psTotal);
+    document.getElementById('statAsc').textContent = nf(asc.count);
+    renderAsc();
+
+    // equipo
+    const eqList = document.getElementById('equipList');
+    if (!built.equip) {
+      eqList.innerHTML = EQUIP.map(e => `<article class="upgrade" data-piece="${e.id}">
+        <img class="icon" src="${e.icon}" alt="" width="42" height="42" style="image-rendering:pixelated">
+        <div class="up-body"><h3>${e.name}<span class="lvl"></span></h3>
+          <p><b class="cps"></b> · ${e.bonus}</p><p class="up-state"></p></div>
+        <div class="up-buy"><span class="price"><i class="dot moneda"></i><span class="pv"></span></span>
+          <button type="button" data-equip="${e.id}"></button></div>
+      </article>`).join('');
+      built.equip = true;
+    }
+    let canEquip = false;
+    EQUIP.forEach((e, i) => {
+      const card = eqList.querySelector(`[data-piece="${e.id}"]`), why = lockReason(i), c = eqCost(e), falta = c - money;
+      card.classList.toggle('locked', !!why);
+      const lvl = card.querySelector('.lvl'); lvl.textContent = 'Nv ' + e.lv; lvl.classList.toggle('zero', !e.lv);
+      const m = pieceMult(e);
+      card.querySelector('.cps').textContent = e.lv
+        ? `${fmtCps(pieceCps(e))} monedas/s${m > 1 ? ` (×${m})` : ''}`
+        : `+${fmtCps(e.cps * m)} monedas/s por nivel`;
+      card.querySelector('.up-state').textContent = why || (falta > 0 ? `Te faltan ${fmt(Math.ceil(falta))} ${plural(falta)}.` : '¡Ya te alcanza!');
+      card.querySelector('.pv').textContent = fmt(c);
+      const b = card.querySelector('button');
+      b.textContent = e.lv ? 'Mejorar' : 'Comprar';
+      b.disabled = !!why || falta > 0;
+      if (!why && falta <= 0) canEquip = true;
+    });
+
+    // mejoras por hitos de nivel
+    const msShown = [];
+    EQUIP.forEach(e => MILESTONES.forEach((m, t) => { if (e.lv >= m) msShown.push({ e, m, t, key: `${e.id}@${m}` }); }));
+    const msKey = msShown.map(x => x.key).join(',');
+    const msList = document.getElementById('milestoneList');
+    if (built.ms !== msKey) {
+      msList.innerHTML = msShown.map(({ e, m, t, key }) => `<article class="upgrade" data-ms="${key}">
+        <img class="icon" src="${e.icon}" alt="" width="42" height="42" style="image-rendering:pixelated">
+        <div class="up-body"><h3>${e.name} ${TIERS[t]}</h3><p>Tu ${e.name.toLowerCase()} produce +100% monedas/s. Aparece en el nivel ${m}.</p><p class="up-state"></p></div>
+        <div class="up-buy"><span class="price"><i class="dot moneda"></i>${fmt(msCost(e, m))}</span>
+          <button type="button" data-buyms="${key}">Comprar</button></div>
+      </article>`).join('');
+      built.ms = msKey;
+    }
+    let canMs = false;
+    msShown.forEach(({ e, m, key }) => {
+      const card = msList.querySelector(`[data-ms="${key}"]`), own = eqUps.has(key), c = msCost(e, m), falta = c - money;
+      card.classList.toggle('owned', own);
+      card.querySelector('.up-state').textContent = own ? 'Comprada.' : falta > 0 ? `Te faltan ${fmt(Math.ceil(falta))} ${plural(falta)}.` : '¡Ya te alcanza!';
+      const b = card.querySelector('button'); b.hidden = own; b.disabled = falta > 0;
+      if (!own && falta <= 0) canMs = true;
+    });
+    // pista del próximo hito
+    let next = null;
+    EQUIP.forEach(e => { if (!e.lv) return; const m = MILESTONES.find(x => e.lv < x); if (m && (!next || m - e.lv < next.m - next.e.lv)) next = { e, m }; });
+    document.getElementById('msHint').textContent = next
+      ? `Próximo hito: ${next.e.name.toLowerCase()} en nivel ${next.m} (te faltan ${next.m - next.e.lv} niveles).`
+      : 'Compra equipo para empezar a desbloquear mejoras de hito en los niveles 10, 50, 100, 150 y 200.';
+
+    // misiones
+    const qList = document.getElementById('questList');
+    if (!built.quests) {
+      qList.innerHTML = QUESTS.map(q => `<div class="quest" data-q="${q.id}">
+        <div><h3>${q.text}</h3><span class="prog"></span></div>
+        <button type="button" data-quest="${q.id}"></button>
+        <div class="bar"><i></i></div>
+      </div>`).join('');
+      built.quests = true;
+    }
+    let anyQuest = false;
+    QUESTS.forEach(q => {
+      const el = qList.querySelector(`[data-q="${q.id}"]`), done = claimed.has(q.id), v = Math.min(q.prog(), q.goal), ready = questReady(q);
+      el.classList.toggle('claimed', done); el.classList.toggle('ready', ready);
+      const rw = q.unlock ? `desbloquea: ${EQUIP.find(e => e.id === q.unlock).name.toLowerCase()}` : `recompensa: ${q.reward} monedas`;
+      el.querySelector('.prog').textContent = `${nf(v)} / ${nf(q.goal)} · ${rw}`;
+      el.querySelector('.bar i').style.width = (v / q.goal * 100) + '%';
+      const b = el.querySelector('button'); b.textContent = done ? 'Reclamada' : 'Reclamar'; b.disabled = !ready;
+      if (ready) anyQuest = true;
+    });
+
+    // avisos
+    const canUp = (!UPGRADES.moobs.owned && money >= UPGRADES.moobs.cost) || canMs;
+    const dots = document.querySelectorAll('#shop .tab .tdot');
+    dots[0].hidden = !canEquip; dots[1].hidden = !canUp; dots[2].hidden = !anyQuest;
+    document.getElementById('shopBadge').hidden = !(canEquip || canUp || anyQuest);
+    if (!document.getElementById('panel-stats').hidden) renderLife();
+  }
+  function renderAsc() {
+    const p = pendingPS(), cur = prestigeMult(), after = (1 + .01 * (asc.psTotal + p.k)) * (has('cinturon') ? 1.25 : 1);
+    const set = (id, v) => { document.getElementById(id).textContent = v; };
+    set('ascPS', nf(asc.psAvail));
+    set('ascPending', nf(p.k));
+    set('ascSouls', nf(wallet.moob));
+    set('ascNext', UPGRADES.moobs.owned ? `${nf(p.next)} moobs` : 'moobs bloqueados');
+    set('ascBonus', '+' + nf(Math.round((cur - 1) * 100)) + '%');
+    set('ascBonusAfter', '+' + nf(Math.round((after - 1) * 100)) + '%');
+    set('ascTip', p.k < 1 ? 'Necesitas al menos 1 PS por ganar para ascender. Derrota moobs para juntar almas.'
+      : p.k >= Math.max(1, asc.psTotal) ? 'Buen momento para ascender: los PS por ganar ya igualan a los que tienes.'
+      : `Puedes ascender ya, pero conviene esperar a tener ${nf(Math.max(1, asc.psTotal))} PS por ganar (igual a los que ya tienes).`);
+    document.getElementById('ascGo').disabled = p.k < 1;
+    // árbol
+    const tl = document.getElementById('treeList');
+    if (!built.tree) {
+      tl.innerHTML = TREE.map(n => `<article class="upgrade" data-node="${n.id}">
+        <div class="node-cost"><b>${n.cost}</b><span>PS</span></div>
+        <div class="up-body"><h3>${n.name}</h3><p>${n.desc}</p><p class="up-state"></p></div>
+        <div class="up-buy"><button type="button" data-buynode="${n.id}">Comprar</button></div>
+      </article>`).join('');
+      built.tree = true;
+    }
+    let canNode = false;
+    TREE.forEach(n => {
+      const card = tl.querySelector(`[data-node="${n.id}"]`), own = has(n.id), falta = n.cost - asc.psAvail;
+      card.classList.toggle('owned', own);
+      card.querySelector('.up-state').textContent = own ? 'Comprado. Se mantiene al ascender.' : falta > 0 ? `Te faltan ${falta} PS.` : '¡Ya te alcanza!';
+      const b = card.querySelector('button'); b.hidden = own; b.disabled = falta > 0;
+      if (!own && falta <= 0) canNode = true;
+    });
+    // ultra
+    const ul = has('ultra');
+    document.getElementById('ultraLocked').hidden = ul;
+    document.getElementById('ultraBox').hidden = !ul;
+    document.getElementById('stonesBox').hidden = !(ul || asc.uspTotal > 0);
+    set('ultraGain', nf(ultraGain()));
+    set('ultraPUS', nf(asc.usp));
+    document.getElementById('ultraGo').disabled = !ul || ultraGain() < 1;
+    set('stoneAct', `${asc.stones.act} puntos · +${Math.round(actBonus() * 100)}% al valor de monedas y moobs recogidos`);
+    set('stoneIdle', `${asc.stones.idle} puntos · ganas el ${Math.round(offlineRate() * 100)}% de tu producción mientras no juegas`);
+    document.querySelectorAll('[data-stone]').forEach(b => { b.disabled = asc.usp < 1; });
+    // aviso
+    const ready = p.k >= Math.max(1, asc.psTotal);
+    const adots = document.querySelectorAll('#asc .tab .tdot');
+    adots[0].hidden = !ready; adots[1].hidden = !canNode; adots[2].hidden = !(asc.usp >= 1 || (ul && ultraGain() >= 1));
+    document.getElementById('ascBadge').hidden = !(ready || canNode || asc.usp >= 1);
+  }
+  function renderLife() {
+    const tot = life.coins + life.moobs;
+    const misses = stats.lifeMiss || 0;
+    const t = Math.floor(life.time), mm = Math.floor(t / 60), ss = String(t % 60).padStart(2, '0');
+    const rows = [
+      ['Monedas recogidas', nf(life.coins)], ['Moobs derrotados', UPGRADES.moobs.owned || life.moobs ? nf(life.moobs) : 'Bloqueado'],
+      ['Objetos perdidos', nf(misses)], ['Acierto', tot + misses ? Math.round(tot / (tot + misses) * 100) + '%' : '–'],
+      ['Grupos completos', nf(life.perfect) + ' / ' + nf(life.groups)], ['Mejor racha', nf(life.bestStreak)],
+      ['Saltos', nf(life.jumps)], ['Ataques', nf(life.attacks)],
+      ['Distancia', nf(Math.floor(life.dist / 16)) + ' m'], ['Tiempo de juego', `${mm}:${ss}`],
+      ['Ascensiones', nf(asc.count)], ['Puntos Slayer ganados', nf(asc.psTotal)],
+      ['Ultra ascensiones', nf(asc.ultras)], ['PUS ganados', nf(asc.uspTotal)],
+      ['Monedas por segundo', fmtCps(totalCps())], ['Monedas pasivas', fmt(life.passive)],
+      ['Monedas gastadas', fmt(life.spent)], ['Piezas compradas', nf(life.equipBought)],
+    ];
+    document.getElementById('lifeStats').innerHTML = rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
   }
   function renderNext() {
     const el = document.getElementById('sNext');
@@ -693,10 +1259,13 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     el.textContent = d > 0 ? d + ' px' : 'aquí';
   }
 
-  let last = performance.now(), prevRunFrame = -1, uiTick = 0;
+  let last = performance.now(), prevRunFrame = -1, uiTick = 0, shopTick = 0;
   function loop(now) {
-    const dt = Math.max(0, Math.min(.05, (now - last) / 1000)); last = now;
-    const speed = hero.running ? 90 : 0;
+    let dt = Math.max(0, Math.min(.05, (now - last) / 1000)); last = now;
+    if (cfg.pauseShop && (!shopEl.hidden || !ascEl.hidden)) dt = 0;
+    const speed = hero.running ? 90 * derived().speed : 0;
+    life.dist += speed * dt; life.time += dt;
+    const cpsNow = totalCps(); wallet.moneda += cpsNow * dt; life.passive += cpsNow * dt;
     scroll += speed * dt;
     clock += dt;
 
@@ -746,11 +1315,18 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     g.drawImage(spr, HERO_X - 18, Math.round(GROUND - 38 + hero.y));
 
     // dust
+    if (!cfg.particles) { dust.length = 0; fx = fx.filter(p => p.kind === 'text'); }
     dust = dust.filter(d => (d.life -= dt) > 0);
     for (const d of dust) { d.x += (d.vx - speed * .3) * dt; d.y += d.vy * dt; d.vy += 30 * dt; g.fillStyle = `rgba(239,233,255,${Math.min(1, d.life * 2) * .6})`; g.fillRect(d.x | 0, d.y | 0, 2, 2); }
 
     drawFx(dt);
-    if ((uiTick += dt) > .1) { uiTick = 0; renderNext(); }
+    if ((uiTick += dt) > .1) {
+      uiTick = 0; renderNext();
+      document.getElementById('hudCoins').textContent = fmt(wallet.moneda);
+      document.getElementById('statCoins').textContent = fmt(wallet.moneda);
+      document.getElementById('shopCoins').textContent = fmt(wallet.moneda);
+      if ((shopTick = (shopTick || 0) + 1) % 3 === 0) { renderShop(); renderUpgrade(); }
+    }
 
     hudState.textContent = state === 'attack' ? 'Atacando' : base === 'jump' ? 'Saltando' : base === 'run' ? 'Corriendo' : 'Quieto';
     requestAnimationFrame(loop);
@@ -808,16 +1384,207 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   const patternSel = document.getElementById('pattern'), delayIn = document.getElementById('delay'), guidesIn = document.getElementById('guides');
   patternSel.addEventListener('change', () => { cfg.pattern = patternSel.value; altHigh = false; });
   delayIn.addEventListener('input', () => { cfg.delay = +delayIn.value; document.getElementById('delayOut').textContent = cfg.delay.toFixed(1) + ' s'; });
-  guidesIn.addEventListener('change', () => { cfg.guides = guidesIn.checked; });
+  guidesIn.addEventListener('change', () => { cfg.guides = guidesIn.checked; document.getElementById('cfgGuides').checked = cfg.guides; });
   document.getElementById('resetStats').addEventListener('click', () => { stats.got = stats.miss = 0; stats.log = group && !group.done ? [group] : []; renderStats(); });
   cfg.pattern = patternSel.value; cfg.delay = +delayIn.value; cfg.guides = guidesIn.checked;
   document.getElementById('delayOut').textContent = cfg.delay.toFixed(1) + ' s';
 
   document.getElementById('buyMoobs').addEventListener('click', () => buyMoobs(false));
+  // ---------- tienda ----------
+  const shopEl = document.getElementById('shop'), shopBtn = document.getElementById('shopBtn');
+  const ascEl = document.getElementById('asc'), ascBtn = document.getElementById('ascBtn');
+  function setShop(open) {
+    if (open) setAsc(false, true);
+    shopEl.hidden = !open; shopBtn.hidden = open; ascBtn.hidden = open;
+    shopBtn.setAttribute('aria-expanded', String(open));
+    if (open) { renderShop(); document.getElementById('shopClose').focus(); } else shopBtn.focus();
+  }
+  function setAsc(open, quiet) {
+    if (open) setShop(false);
+    ascEl.hidden = !open; ascBtn.hidden = open; shopBtn.hidden = open;
+    ascBtn.setAttribute('aria-expanded', String(open));
+    document.getElementById('ascConfirm').hidden = true; document.getElementById('ultraConfirm').hidden = true;
+    if (open) { renderAsc(); document.getElementById('ascClose').focus(); } else if (!quiet) ascBtn.focus();
+  }
+  ascBtn.addEventListener('click', () => setAsc(true));
+  document.getElementById('ascClose').addEventListener('click', () => setAsc(false));
+  shopBtn.addEventListener('click', () => setShop(true));
+  document.getElementById('shopClose').addEventListener('click', () => setShop(false));
+  window.addEventListener('keydown', e => {
+    if (e.target === nameInput) return;
+    if (e.code === 'Escape' && !shopEl.hidden) setShop(false);
+    else if (e.code === 'Escape' && !ascEl.hidden) setAsc(false);
+    else if (e.code === 'KeyT') setShop(shopEl.hidden);
+    else if (e.code === 'KeyY') setAsc(ascEl.hidden);
+  });
+  {
+    const c = document.getElementById('shopIcon').getContext('2d');
+    const col = { K: '#1a1423', y: '#f2c14e', Y: '#c4862a', w: '#fff1a8' };
+    ['....KKKK....', '...K....K...', '...K....K...', '.KKKKKKKKKK.', '.KwyyyyyyyK.', '.KyyyyyyyyK.', '.KyyyKKyyyK.', '.KyyyKKyyyK.', '.KyyyyyyyyK.', '.KYYYYYYYYK.', '.KKKKKKKKKK.', '............']
+      .forEach((r, y) => [...r].forEach((ch, x) => { if (col[ch]) { c.fillStyle = col[ch]; c.fillRect(x, y, 1, 1); } }));
+  }
+  // pestañas
+  const tabs = [...document.querySelectorAll('#shop .tab')];
+  function selectTab(tab) {
+    tabs.forEach(t => {
+      const on = t === tab;
+      t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+    });
+    if (tab.id === 'tab-stats') renderLife();
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => selectTab(t));
+    t.addEventListener('keydown', e => {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      const n = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+      selectTab(n); n.focus();
+    });
+  });
+  selectTab(tabs[0]);
+  document.getElementById('equipList').addEventListener('click', e => { const b = e.target.closest('[data-equip]'); if (b) buyEquip(b.dataset.equip); });
+  document.getElementById('milestoneList').addEventListener('click', e => { const b = e.target.closest('[data-buyms]'); if (b) buyMilestone(b.dataset.buyms); });
+  document.getElementById('questList').addEventListener('click', e => { const b = e.target.closest('[data-quest]'); if (b) claimQuest(b.dataset.quest); });
+  // configuración
+  const cfgGuides = document.getElementById('cfgGuides');
+  cfgGuides.addEventListener('change', () => { cfg.guides = cfgGuides.checked; guidesIn.checked = cfg.guides; });
+  document.getElementById('cfgParticles').addEventListener('change', e => { cfg.particles = e.target.checked; });
+  document.getElementById('cfgHud').addEventListener('change', e => { cfg.hud = e.target.checked; document.querySelector('.hud').hidden = !cfg.hud; });
+  document.getElementById('cfgPause').addEventListener('change', e => { cfg.pauseShop = e.target.checked; });
+  const resetConfirm = document.getElementById('resetConfirm'), resetAsk = document.getElementById('resetAsk');
+  resetAsk.addEventListener('click', () => { resetConfirm.hidden = false; resetAsk.hidden = true; document.getElementById('resetNo').focus(); });
+  document.getElementById('resetNo').addEventListener('click', () => { resetConfirm.hidden = true; resetAsk.hidden = false; resetAsk.focus(); });
+  document.getElementById('resetYes').addEventListener('click', () => {
+    wallet.moneda = 0; wallet.moob = 0;
+    EQUIP.forEach(e => { e.lv = 0; }); eqUps.clear();
+    UPGRADES.moobs.owned = false; claimed.clear();
+    Object.assign(asc, { psAvail: 0, psTotal: 0, count: 0, usp: 0, uspTotal: 0, ultras: 0, stones: { act: 0, idle: 0 } }); asc.nodes.clear();
+    life = freshLife();
+    stats.got = stats.miss = stats.n = 0; stats.lifeMiss = 0; stats.log = [];
+    items = []; group = null; waitT = .6; altHigh = false;
+    resetConfirm.hidden = true; resetAsk.hidden = false;
+    try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+    renderStats(); saveGame(); toast('Progreso reiniciado');
+  });
+  const atabs = [...document.querySelectorAll('#asc .tab')];
+  function selectATab(tab) {
+    atabs.forEach(t => { const on = t === tab; t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1; document.getElementById(t.getAttribute('aria-controls')).hidden = !on; });
+  }
+  atabs.forEach((t, i) => {
+    t.addEventListener('click', () => selectATab(t));
+    t.addEventListener('keydown', e => {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      const n = atabs[(i + (e.key === 'ArrowRight' ? 1 : atabs.length - 1)) % atabs.length]; selectATab(n); n.focus();
+    });
+  });
+  selectATab(atabs[0]);
+  const pair = (go, conf, yes, no, fn) => {
+    const g = document.getElementById(go), c = document.getElementById(conf);
+    g.addEventListener('click', () => { c.hidden = false; g.hidden = true; document.getElementById(no).focus(); });
+    document.getElementById(no).addEventListener('click', () => { c.hidden = true; g.hidden = false; g.focus(); });
+    document.getElementById(yes).addEventListener('click', () => { c.hidden = true; g.hidden = false; fn(); });
+  };
+  pair('ascGo', 'ascConfirm', 'ascYes', 'ascNo', ascend);
+  pair('ultraGo', 'ultraConfirm', 'ultraYes', 'ultraNo', ultraAscend);
+  document.getElementById('treeList').addEventListener('click', e => { const b = e.target.closest('[data-buynode]'); if (b) buyNode(b.dataset.buynode); });
+  document.querySelectorAll('[data-stone]').forEach(b => b.addEventListener('click', () => buyStone(b.dataset.stone)));
+  {
+    const c = document.getElementById('ascIcon').getContext('2d');
+    const col = { K: '#1a1423', p: '#b48cff', P: '#6b4aa8', w: '#ffffff' };
+    ['.....KK.....', '....KwpK....', '....KppK....', '...KpwppK...', '...KppppK...', '..KpppwppK..', '..KppppppK..', '.KpppppppPK.', '.KPpppppPPK.', '..KPPPPPPK..', '...KKKKKK...', '............']
+      .forEach((r, y) => [...r].forEach((ch, x) => { if (col[ch]) { c.fillStyle = col[ch]; c.fillRect(x, y, 1, 1); } }));
+  }
+  document.getElementById('devSouls').addEventListener('click', () => { wallet.moob += 20; life.moobs += 20; renderStats(); });
+  document.getElementById('devPS').addEventListener('click', () => { asc.psAvail += 5; asc.psTotal += 5; renderStats(); });
   document.getElementById('devUnlock').addEventListener('click', () => buyMoobs(true));
   document.getElementById('devLock').addEventListener('click', lockMoobs);
   document.getElementById('devCoins').addEventListener('click', () => { wallet.moneda += 10; renderStats(); });
+  document.getElementById('devCoinsBig').addEventListener('click', () => { wallet.moneda += 10000; renderStats(); });
   document.getElementById('upIcon').getContext('2d').drawImage(moobFrames[0], 0, 0);
+
+  // ---------- guardado ----------
+  // Se guarda en el navegador del jugador (localStorage). Para sincronizar entre dispositivos
+  // en el servidor, basta con enviar este mismo objeto a una API en saveGame() y leerlo en loadGame().
+  const SAVE_KEY = 'moobs-slayer-save-v1';
+  let lastSave = 0;
+  function snapshot() {
+    return {
+      v: 1, t: Date.now(),
+      wallet: { ...wallet },
+      equip: Object.fromEntries(EQUIP.map(e => [e.id, e.lv])),
+      eqUps: [...eqUps],
+      moobs: UPGRADES.moobs.owned,
+      claimed: [...claimed],
+      asc: { ...asc, nodes: [...asc.nodes], stones: { ...asc.stones } },
+      life: { ...life },
+      stats: { got: stats.got, miss: stats.miss, n: stats.n, lifeMiss: stats.lifeMiss || 0 },
+      cfg: { guides: cfg.guides, particles: cfg.particles, pauseShop: cfg.pauseShop, hud: cfg.hud !== false, pattern: cfg.pattern, delay: cfg.delay },
+    };
+  }
+  function saveGame() {
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(snapshot())); lastSave = Date.now(); renderSaveState(); return true; }
+    catch (e) { document.getElementById('saveState').textContent = 'No se pudo guardar: este navegador bloquea el almacenamiento.'; return false; }
+  }
+  function loadGame() {
+    let d;
+    try { d = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (e) { return false; }
+    if (!d || d.v !== 1) return false;
+    const num = (v, def = 0) => (typeof v === 'number' && isFinite(v) && v >= 0 ? v : def);
+    wallet.moneda = num(d.wallet?.moneda); wallet.moob = num(d.wallet?.moob);
+    EQUIP.forEach(e => { e.lv = Math.floor(num(d.equip?.[e.id])); });
+    UPGRADES.moobs.owned = !!d.moobs;
+    eqUps.clear(); (d.eqUps || []).forEach(k => { const [id, m] = String(k).split('@'); if (EQUIP.some(e => e.id === id) && MILESTONES.includes(+m)) eqUps.add(k); });
+    claimed.clear(); (d.claimed || []).forEach(id => { if (QUESTS.some(q => q.id === id)) claimed.add(id); });
+    const fl = freshLife();
+    for (const k in fl) life[k] = num(d.life?.[k], fl[k]);
+    life.streak = 0;
+    stats.got = num(d.stats?.got); stats.miss = num(d.stats?.miss); stats.n = num(d.stats?.n); stats.lifeMiss = num(d.stats?.lifeMiss);
+    const c = d.cfg || {};
+    cfg.guides = c.guides !== false; cfg.particles = c.particles !== false; cfg.pauseShop = !!c.pauseShop; cfg.hud = c.hud !== false;
+    if (PATTERNS[c.pattern]) cfg.pattern = c.pattern;
+    if (typeof c.delay === 'number') cfg.delay = Math.min(3, Math.max(0, c.delay));
+    guidesIn.checked = cfgGuides.checked = cfg.guides;
+    document.getElementById('cfgParticles').checked = cfg.particles;
+    document.getElementById('cfgPause').checked = cfg.pauseShop;
+    document.getElementById('cfgHud').checked = cfg.hud;
+    document.querySelector('.hud').hidden = !cfg.hud;
+    patternSel.value = cfg.pattern; delayIn.value = cfg.delay;
+    document.getElementById('delayOut').textContent = cfg.delay.toFixed(1) + ' s';
+    const a = d.asc || {};
+    for (const k of ['psAvail', 'psTotal', 'count', 'usp', 'uspTotal', 'ultras']) asc[k] = Math.floor(num(a[k]));
+    asc.stones = { act: Math.floor(num(a.stones?.act)), idle: Math.floor(num(a.stones?.idle)) };
+    asc.nodes.clear(); (a.nodes || []).forEach(id => { if (TREE.some(n => n.id === id)) asc.nodes.add(id); });
+    if (has('cazador')) UPGRADES.moobs.owned = true;
+    lastSave = d.t || Date.now();
+    // ganancia sin conexión (como en Idle Slayer): un % de la producción por el tiempo fuera, máximo 8 horas
+    const away = Math.min(8 * 3600, Math.max(0, (Date.now() - (d.t || Date.now())) / 1000));
+    offlineGain = away > 30 ? totalCps() * away * offlineRate() : 0;
+    if (offlineGain > 0) { wallet.moneda += offlineGain; life.passive += offlineGain; }
+    return true;
+  }
+  function renderSaveState() {
+    if (!lastSave) return;
+    const sec = Math.round((Date.now() - lastSave) / 1000);
+    document.getElementById('saveState').textContent = sec < 2 ? 'Guardado justo ahora.' : `Último guardado hace ${sec < 60 ? sec + ' s' : Math.floor(sec / 60) + ' min'}.`;
+  }
+  let toastT;
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg; el.hidden = false; el.style.opacity = 1;
+    clearTimeout(toastT);
+    toastT = setTimeout(() => { el.style.opacity = 0; toastT = setTimeout(() => { el.hidden = true; }, 400); }, 1800);
+  }
+  document.getElementById('saveNow').addEventListener('click', () => { if (saveGame()) toast('Partida guardada'); });
+  patternSel.addEventListener('change', saveGame);
+  delayIn.addEventListener('change', saveGame);
+  ['cfgGuides', 'cfgParticles', 'cfgHud', 'cfgPause', 'guides'].forEach(id => document.getElementById(id).addEventListener('change', saveGame));
+  setInterval(() => { saveGame(); }, 5000);
+  setInterval(renderSaveState, 1000);
+  window.addEventListener('pagehide', saveGame);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) saveGame(); });
+
+  let offlineGain = 0;
+  if (loadGame()) toast(offlineGain >= 1 ? `Partida cargada · ganaste ${fmt(offlineGain)} monedas mientras no estabas` : 'Partida cargada');
   renderStats();
 
   syncInputs();

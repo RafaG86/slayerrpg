@@ -12,10 +12,25 @@ Abre `moobs-slayer/index.html` en el navegador para jugar. No necesita instalaci
 - **J**: atacar
 - **K**: ataque en altura (solo desarrollo)
 - **P**: correr / detener
+- **T**: tienda · **Y**: ascensión
 
 ### Estado actual
 
 - Personaje pixel art con animaciones de correr, quieto, saltar y atacar, y colores personalizables.
 - Monedas en grupos de 1 a 3, siempre por encima del piso.
 - Mejora "Llegan los moobs" (10 monedas): desbloquea los moobs, que pueden aparecer a cualquier altura.
+- Tienda (botón abajo a la derecha, tecla T) con cinco secciones:
+  - **Equipamiento** (modelo Idle Slayer): espada, escudo, armadura, casco, botas veloces y anillo de riqueza. Cada pieza produce monedas por segundo; cada nivel cuesta un 15% más. Desde el casco, cada pieza pide completar una misión.
+  - **Mejoras**: "Llegan los moobs" y mejoras de hito (niveles 10, 50, 100, 150 y 200 de cada pieza) que dan +100% de producción, sumadas sobre la base.
+  - **Misiones**: objetivos con recompensa en monedas o que desbloquean equipo.
+  - **Configuración**: guías, partículas, barra superior, pausa con la tienda abierta y reinicio de progreso.
+  - **Estadísticas**: monedas, moobs, acierto, rachas, saltos, distancia y tiempo de juego.
+- Los moobs son los enemigos: se derrotan tocándolos o con el ataque y funcionan como las almas del Idle Slayer.
+- Ascensión (botón abajo a la izquierda):
+  - Los moobs de la partida se convierten en Puntos Slayer (PS); cada PS cuesta 4 moobs más que el anterior (el primero cuesta 5). Cada PS ganado da +1% de monedas por segundo para siempre.
+  - Al ascender se reinician monedas, moobs, equipo y mejoras; se conservan PS, árbol, misiones, estadísticas y configuración.
+  - Árbol de 8 nodos pagados con PS (más producción, moobs desde el inicio, reinversión, hordas de 4, herencia, puerta ultra…).
+  - Ultra ascensión (se desbloquea en el árbol): borra PS y árbol y da Puntos Ultra Slayer = raíz cuadrada de los PS. Se gastan en las Piedras del Tiempo: Actividad (valor de monedas y moobs) e Inactividad (ganancia sin conexión), con rendimiento decreciente.
+  - Ganancia sin conexión: 10% de la producción (más con la Piedra de Inactividad), hasta 8 horas.
+- Guardado automático en el navegador (localStorage, clave `moobs-slayer-save-v1`): monedas, moobs, equipo, mejoras, misiones, estadísticas y configuración. Se guarda cada 5 s, al comprar o reclamar y al cerrar la página; se carga sola al abrir el juego.
 - Panel de patrones de aparición para estudiar y mejorar el respawn.
