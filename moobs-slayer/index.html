@@ -78,6 +78,12 @@ h3.sub { font-family: var(--f-display); font-size: 17px; margin: 6px 0 0; }
 .wallet { font-family: var(--f-display); font-size: 18px; font-variant-numeric: tabular-nums; }
 .shop-close { background: var(--panel); color: var(--ink); box-shadow: 0 3px 0 var(--line); padding: 4px 10px; font-size: 16px; }
 .shop-list { display: grid; gap: 10px; }
+.filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.filters button { font-size: 13px; padding: 4px 10px; background: var(--panel); color: var(--dim); box-shadow: 0 2px 0 var(--line); background-image: none; border-radius: 999px; }
+.filters button[aria-pressed="true"] { background: #b48cff; color: var(--night); box-shadow: 0 2px 0 #6b4aa8; }
+.ucat { width: 42px; height: 42px; border-radius: 12px; display: grid; place-content: center; font-family: var(--f-display); font-weight: 700; font-size: 11px; text-align: center; line-height: 1.05; color: var(--night); border: 2px solid rgba(0,0,0,.25); }
+.ucat.prod { background: #f2c14e; } .ucat.valor { background: #d9e2ec; } .ucat.logros { background: #6fe3c1; } .ucat.almas { background: #e48bf0; } .ucat.arco { background: #c9a26b; } .ucat.caja { background: #ffb347; } .ucat.enemigos { background: #ff7a8a; } .ucat.iman { background: #8fc7ff; } .ucat.otros { background: #b48cff; }
+.upgrade.soon { opacity: .6; }
 .qty { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 14px; color: var(--dim); }
 .qty button { font-size: 14px; padding: 5px 12px; background: var(--panel); color: var(--ink); box-shadow: 0 3px 0 var(--line); background-image: none; }
 .qty button[aria-pressed="true"] { background: var(--ember); color: var(--night); box-shadow: 0 3px 0 #b06f1c; }
@@ -322,7 +328,12 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
         <div class="shop-list" id="equipList"></div>
       </section>
       <section class="panel" role="tabpanel" id="panel-mejoras" aria-labelledby="tab-mejoras" hidden>
-        <p class="panel-note">Compras únicas. Las de hito aparecen cuando una pieza llega a nivel 10, 50, 100, 150 y 200, y le dan +100% de producción.</p>
+        <p class="panel-note">Compras únicas con monedas, como en el original. Casi todas se pierden al ascender. Filtra por estado o por tipo.</p>
+        <div class="filters" role="group" aria-label="Filtrar mejoras">
+          <button type="button" data-uf="disp" aria-pressed="true">Disponibles</button><button type="button" data-uf="prox" aria-pressed="false">Próximas</button><button type="button" data-uf="own" aria-pressed="false">Compradas</button>
+          <button type="button" data-uf="prod" aria-pressed="false">Producción</button><button type="button" data-uf="valor" aria-pressed="false">Valor</button><button type="button" data-uf="logros" aria-pressed="false">Logros</button><button type="button" data-uf="almas" aria-pressed="false">Almas</button><button type="button" data-uf="arco" aria-pressed="false">Arco</button><button type="button" data-uf="caja" aria-pressed="false">Cajas</button><button type="button" data-uf="enemigos" aria-pressed="false">Enemigos</button><button type="button" data-uf="iman" aria-pressed="false">Imán y boost</button><button type="button" data-uf="otros" aria-pressed="false">Otras</button><button type="button" data-uf="equipo" aria-pressed="false">Hitos de equipo</button>
+        </div>
+        <p class="panel-note" id="upEmpty" hidden></p>
         <div class="shop-list">
           <article class="upgrade" id="upMoobs">
         <canvas id="upIcon" width="14" height="14" aria-hidden="true"></canvas>
@@ -336,6 +347,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
           <button type="button" id="buyMoobs" disabled>Comprar</button>
         </div>
       </article>
+          <div class="shop-list" id="upgList"></div>
           <p class="panel-note" id="msHint"></p>
           <div class="shop-list" id="milestoneList"></div>
         </div>
@@ -981,7 +993,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   // ---------- mejoras ----------
   // Al empezar solo aparecen monedas; los moobs se desbloquean comprando la mejora.
   const UPGRADES = { moobs: { cost: 10, owned: false } };
-  const pickType = () => UPGRADES.moobs.owned ? pick(['moob', 'moneda']) : 'moneda';
+  const pickType = () => UPGRADES.moobs.owned ? (Math.random() < (U('masMoobs') ? .65 : .5) ? 'moob' : 'moneda') : 'moneda';
   function buyMoobs(free) {
     const u = UPGRADES.moobs;
     if (u.owned) return;
@@ -1057,9 +1069,9 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   const TIERS = ['de bronce', 'de plata', 'de oro', 'de platino', 'de diamante', 'de rubí', 'de esmeralda', 'de zafiro', 'de obsidiana', 'celestial', 'divina'];
   const eqUps = new Set(); // ids "espada@10"
   const msCost = (e, m) => Math.ceil(e.base * Math.pow(COST_MULT, m) * 5);
-  const pieceMult = e => 1 + MILESTONES.filter(m => eqUps.has(`${e.id}@${m}`)).length;
+  const pieceMult = e => 1 + MILESTONES.filter(m => eqUps.has(`${e.id}@${m}`)).length + (e.id === 'espada' && U('furia') ? 30 : 0);
   const pieceCps = e => e.cps * e.lv * pieceMult(e);
-  const totalCps = () => EQUIP.reduce((s, e) => s + pieceCps(e), 0) * prestigeMult() * achMult() * buffMult('cps') * dimMult('cps');
+  const totalCps = () => EQUIP.reduce((s, e) => s + pieceCps(e), 0) * prestigeMult() * achMult() * buffMult('cps') * dimMult('cps') * (1 + upSum('cps')) * (U('codicia') ? 1 + .001 * totalEqLv() : 1);
   function buyMilestone(key) {
     const [id, m] = key.split('@'), e = EQUIP.find(x => x.id === id), lvl = +m;
     if (!e || eqUps.has(key) || e.lv < lvl) return;
@@ -1087,6 +1099,72 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     renderStats(); saveGame();
   }
   EQUIP.forEach(e => { e.icon = equipIcon(e.id); });
+  // ---------- catálogo de mejoras (compras únicas con monedas, como en el Idle Slayer original) ----------
+  // Casi todas se pierden al ascender. Las que vienen del original conservan su costo cuando se conoce
+  // (Carne 1.280, Recompensa al esfuerzo 200, Cinturón del conocimiento 2.500, Cota de codicia 500 M,
+  // Hongos extravagantes 2e33, Energía estelar 3e60, Cinturón del poder 2,5e68); las demás están ajustadas a nuestra escala.
+  const totalEqLv = () => EQUIP.reduce((s, e) => s + e.lv, 0);
+  const UCATS = { prod: 'Producción', valor: 'Valor de moneda', logros: 'Logros', almas: 'Almas', arco: 'Arco', caja: 'Cajas', enemigos: 'Enemigos', iman: 'Imán y boost', otros: 'Otras' };
+  const UPGS = [
+    // producción (comida)
+    { id: 'pan',       cat: 'prod', name: 'Pan del camino',        cost: 300,     desc: '+1% de monedas por segundo.', fx: { cps: .01 } },
+    { id: 'carne',     cat: 'prod', name: 'Carne',                 cost: 1280,    desc: '+2% de monedas por segundo.', fx: { cps: .02 } },
+    { id: 'guiso',     cat: 'prod', name: 'Guiso de moob',         cost: 50e3,    desc: '+4% de monedas por segundo.', fx: { cps: .04 }, req: () => U('carne'), reqText: 'Compra Carne' },
+    { id: 'banquete',  cat: 'prod', name: 'Banquete',              cost: 5e6,     desc: '+6% de monedas por segundo.', fx: { cps: .06 }, req: () => U('guiso'), reqText: 'Compra Guiso de moob' },
+    { id: 'nectar',    cat: 'prod', name: 'Néctar',                cost: 1e9,     desc: '+8% de monedas por segundo.', fx: { cps: .08 }, req: () => U('banquete'), reqText: 'Compra Banquete' },
+    { id: 'ambrosia',  cat: 'prod', name: 'Ambrosía',              cost: 1e12,    desc: '+10% de monedas por segundo.', fx: { cps: .10 }, req: () => U('nectar'), reqText: 'Compra Néctar' },
+    { id: 'estelar',   cat: 'prod', name: 'Energía estelar',       cost: 3e60,    desc: '+15% de monedas por segundo.', fx: { cps: .15 }, req: () => U('ambrosia'), reqText: 'Compra Ambrosía' },
+    { id: 'codicia',   cat: 'prod', name: 'Cota de codicia',       cost: 500e6,   desc: '+0,1% de monedas por segundo por cada nivel de equipo (suma de todas las piezas).', req: () => totalEqLv() >= 100, reqText: 'Suma 100 niveles de equipo' },
+    { id: 'furia',     cat: 'prod', name: 'Espada de furia',       cost: 2e9,     desc: 'Tu espada produce +3000%.', req: () => lvOf('espada') >= 150, reqText: 'Espada en nivel 150' },
+    // valor de moneda
+    { id: 'esfuerzo',  cat: 'valor', name: 'Recompensa al esfuerzo', cost: 200,   desc: 'Cada moneda recogida vale además el 10% de tus monedas por segundo.', fx: { coin: .10 } },
+    { id: 'monedero',  cat: 'valor', name: 'Monedero grande',      cost: 25e3,    desc: 'Cada moneda recogida vale además el 25% de tus monedas por segundo.', fx: { coin: .25 }, req: () => U('esfuerzo'), reqText: 'Compra Recompensa al esfuerzo' },
+    { id: 'cofre',     cat: 'valor', name: 'Cofre sin fondo',      cost: 1e12,    desc: 'Cada moneda recogida vale además el 100% de tus monedas por segundo.', fx: { coin: 1 }, req: () => U('monedero'), reqText: 'Compra Monedero grande' },
+    { id: 'hongos',    cat: 'valor', name: 'Hongos extravagantes', cost: 2e33,    desc: 'Cada moneda recogida vale además el 30% de tus monedas por segundo.', fx: { coin: .30 }, req: () => U('cofre'), reqText: 'Compra Cofre sin fondo' },
+    // logros
+    { id: 'cConoc',    cat: 'logros', name: 'Cinturón del conocimiento', cost: 2500, desc: '+1% de monedas por segundo extra por cada logro.', fx: { ach: .01 }, req: () => achieved.size >= 1, reqText: 'Consigue 1 logro' },
+    { id: 'cSabio',    cat: 'logros', name: 'Cinturón de la sabiduría', cost: 1e9, desc: '+1% de monedas por segundo extra por cada logro.', fx: { ach: .01 }, req: () => U('cConoc') && achieved.size >= 8, reqText: 'Cinturón del conocimiento y 8 logros' },
+    { id: 'cPoder',    cat: 'logros', name: 'Cinturón del poder',  cost: 2.5e68,  desc: '+2% de monedas por segundo extra por cada logro.', fx: { ach: .02 }, req: () => U('cSabio'), reqText: 'Compra Cinturón de la sabiduría' },
+    // almas
+    { id: 'cosecha',   cat: 'almas', name: 'Cosecha de almas',     cost: 5e3,     desc: '+10% de almas por moob.', fx: { soul: .10 }, req: () => UPGRADES.moobs.owned, reqText: 'Desbloquea los moobs' },
+    { id: 'guadana',   cat: 'almas', name: 'Guadaña',              cost: 1e6,     desc: '+25% de almas por moob.', fx: { soul: .25 }, req: () => U('cosecha'), reqText: 'Compra Cosecha de almas' },
+    { id: 'traeme',    cat: 'almas', name: 'Tráeme sus almas',     cost: 1e15,    desc: '+50% de almas por moob.', fx: { soul: .50 }, req: () => lvOf('espada') >= 300, reqText: 'Espada en nivel 300' },
+    // arco
+    { id: 'estabilidad', cat: 'arco', name: 'Estabilidad',         cost: 10e3,    desc: 'Las flechas vuelan rectas y un 30% más rápido.', req: () => has('arco'), reqText: 'Libro de proyectiles (árbol)' },
+    { id: 'triple',    cat: 'arco', name: 'Disparo triple',        cost: 100e3,   desc: 'Cada disparo suelta una flecha extra hacia arriba.', req: () => has('arco'), reqText: 'Libro de proyectiles (árbol)' },
+    { id: 'carcaj',    cat: 'arco', name: 'Carcaj rápido',         cost: 10e6,    desc: 'El arco dispara un 30% más seguido.', req: () => U('estabilidad'), reqText: 'Compra Estabilidad' },
+    // cajas
+    { id: 'imanCaja',  cat: 'caja', name: 'Imán vertical de cajas', cost: 250e3,  desc: 'La caja se abre sola al pasar sobre ti, sin saltar.', req: () => life.boxes >= 1, reqText: 'Abre 1 caja' },
+    { id: 'cajasFrec', cat: 'caja', name: 'Cajas frecuentes',      cost: 1e6,     desc: 'Las cajas aparecen un 40% más seguido.', req: () => life.boxes >= 3, reqText: 'Abre 3 cajas' },
+    { id: 'cajasMej',  cat: 'caja', name: 'Cajas mejoradas',       cost: 50e6,    desc: 'Los efectos de las cajas duran un 50% más.', req: () => U('cajasFrec'), reqText: 'Compra Cajas frecuentes' },
+    // enemigos
+    { id: 'masMoobs',  cat: 'enemigos', name: 'Cebo para moobs',   cost: 20e3,    desc: 'Los moobs salen más seguido (65% de los grupos).', req: () => UPGRADES.moobs.owned, reqText: 'Desbloquea los moobs' },
+    { id: 'atraeGig',  cat: 'enemigos', name: 'Tambor de gigantes', cost: 2e6,    desc: '+10% de probabilidad de moob gigante.', req: () => life.giants >= 1, reqText: 'Derrota 1 gigante' },
+    { id: 'evolucion', cat: 'enemigos', name: 'Evolución gigante', cost: 100e6,   desc: 'Los gigantes tienen 6 de vida pero dan el doble de moobs.', req: () => U('atraeGig'), reqText: 'Compra Tambor de gigantes' },
+    // imán y boost
+    { id: 'iman1',     cat: 'iman', name: 'Poder del imán I',      cost: 1e6,     desc: 'Atrae las monedas a 12 de distancia.', req: () => lvOf('armadura') >= 50, reqText: 'Armadura en nivel 50' },
+    { id: 'iman2',     cat: 'iman', name: 'Poder del imán II',     cost: 1e9,     desc: 'Atrae las monedas a 22 de distancia.', req: () => lvOf('casco') >= 150, reqText: 'Casco en nivel 150' },
+    { id: 'imanG',     cat: 'iman', name: 'Guantes imantados',     cost: 1e27,    desc: 'Atrae las monedas a 34 de distancia.', req: () => lvOf('guantes') >= 1, reqText: 'Compra los guantes' },
+    { id: 'boostBar',  cat: 'iman', name: 'Boost económico',       cost: 5e3,     desc: 'El boost es gratis y recarga en 20 s en vez de 30.', req: () => life.boosts >= 3, reqText: 'Usa el boost 3 veces' },
+    { id: 'megaBoost', cat: 'iman', name: 'Mega boost',            cost: 1e18,    desc: 'El boost dura 15 s y va a ×4,5.', req: () => lvOf('botas') >= 200, reqText: 'Botas en nivel 200' },
+    // otras
+    { id: 'colgante',  cat: 'otros', name: 'Colgante hechicero',   cost: 1e6,     desc: '+30% de ganancia mientras no juegas.', req: () => asc.count >= 1, reqText: 'Asciende 1 vez' },
+  ];
+  const upOwned = new Set();
+  const U = id => upOwned.has(id);
+  const upSum = key => UPGS.reduce((s, u) => s + (U(u.id) && u.fx && u.fx[key] ? u.fx[key] : 0), 0);
+  const upReady = u => !u.req || u.req();
+  function buyUpg(id) {
+    const u = UPGS.find(x => x.id === id);
+    if (!u || U(id) || !upReady(u) || wallet.moneda < u.cost) return;
+    wallet.moneda -= u.cost; life.spent += u.cost; upOwned.add(id);
+    renderStats(); saveGame();
+  }
+  const magnetR = () => U('imanG') ? 34 : U('iman2') ? 22 : U('iman1') ? 12 : 0;
+  const giantHp = () => U('evolucion') ? 6 : GIANT.hp;
+  const boostCfg = () => ({ cost: U('boostBar') ? 0 : 75, dur: U('megaBoost') ? 15 : 10, cd: U('boostBar') ? 20 : 30, mult: U('megaBoost') ? 4.5 : 3.5 });
+
+
 
   // ---------- ascensión ----------
   // Modelo Idle Slayer: los moobs derrotados son las "almas". Se convierten en Puntos Slayer (PS) al ascender.
@@ -1102,7 +1180,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   const prestigeMult = () => (1 + .01 * asc.psTotal) * (has('cinturon') ? 1.25 : 1);
   const stoneBonus = n => 1 - Math.pow(.9, n); // rendimiento decreciente, máximo 100%
   const actBonus = () => stoneBonus(asc.stones.act);
-  const offlineRate = () => .10 + .5 * stoneBonus(asc.stones.idle);
+  const offlineRate = () => .10 + .5 * stoneBonus(asc.stones.idle) + (U('colgante') ? .3 : 0);
   const TREE = [
     { id: 'cinturon',    name: 'Cinturón de poder',  cost: 1,  desc: '+25% de monedas por segundo.' },
     { id: 'cazador',     name: 'Cazador nato',       cost: 2,  desc: 'Los moobs aparecen desde el inicio de cada partida, sin comprar la mejora.' },
@@ -1126,7 +1204,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   function resetRun() {
     wallet.moneda = has('herencia') ? wallet.moneda * .1 : 0;
     wallet.moob = 0;
-    EQUIP.forEach(e => { e.lv = 0; }); eqUps.clear();
+    EQUIP.forEach(e => { e.lv = 0; }); eqUps.clear(); upOwned.clear();
     UPGRADES.moobs.owned = has('cazador');
     items = []; group = null; waitT = .6; altHigh = false; arrows = [];
     if (bonus.on) { bonus.on = false; document.getElementById('bonusBar').hidden = true; hero.y = 0; hero.vy = 0; hero.air = false; }
@@ -1192,21 +1270,23 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   const boost = { t: 0, cd: 0 };
   function startBoost(free) {
     if (!free) {
-      if (boost.cd > 0 || wallet.moneda < BOOST.cost) return;
-      wallet.moneda -= BOOST.cost; life.spent += BOOST.cost;
+      const bc = boostCfg();
+      if (boost.cd > 0 || wallet.moneda < bc.cost) return;
+      wallet.moneda -= bc.cost; life.spent += bc.cost;
     }
-    boost.t = BOOST.dur; boost.cd = BOOST.dur + BOOST.cd; life.boosts++;
+    const bk = boostCfg(); boost.t = bk.dur; boost.cd = bk.dur + bk.cd; life.boosts++;
     renderStats();
   }
   // al chocar con un gigante el héroe se frena para pelear con él
   const fightingGiant = () => group && group.giant && items[0] && items[0].alive && Math.abs(items[0].wx - scroll - HERO_X) < 16;
-  const currentSpeed = () => hero.running ? 90 * derived().speed * (boost.t > 0 ? BOOST.mult : 1) * (fightingGiant() ? .12 : 1) : 0;
+  const currentSpeed = () => hero.running ? 90 * derived().speed * (boost.t > 0 ? boostCfg().mult : 1) * (fightingGiant() ? .12 : 1) : 0;
 
   // efectos temporales (los da la caja aleatoria); si se repite uno activo, se suma su tiempo
   let buffs = [];
   const buffMult = kind => buffs.filter(b => b.kind === kind).reduce((m, b) => m * b.mult, 1);
   function addBuff(id, kind, mult, dur, name) {
     const b = buffs.find(x => x.id === id);
+    if (U('cajasMej')) dur *= 1.5;
     if (b) b.t += dur; else buffs.push({ id, kind, mult, t: dur, name });
   }
   let hordeLeft = 0;
@@ -1241,12 +1321,12 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     }
     const sx = box.wx - scroll, cy = GROUND - BOX_H;
     const top = GROUND - 22 + hero.y, bot = GROUND + hero.y;
-    if (Math.abs(sx - HERO_X) < 9 && cy > top - 7 && cy < bot) {
-      box.on = false; box.timer = 30 + Math.random() * 90;
+    if (Math.abs(sx - HERO_X) < 9 && ((cy > top - 7 && cy < bot) || U('imanCaja'))) {
+      box.on = false; box.timer = (30 + Math.random() * 90) * (U('cajasFrec') ? .6 : 1);
       for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; fx.push({ x: sx, y: cy, vx: Math.cos(a) * 50, vy: Math.sin(a) * 50, life: .5, kind: 'spark', col: box.silver ? '220,232,255' : '255,200,90' }); }
       if (box.silver) { silverBoxes++; toast('Caja plateada guardada'); renderStats(); saveGame(); }
       else openBox();
-    } else if (sx < -14) { box.on = false; box.timer = 30 + Math.random() * 90; }
+    } else if (sx < -14) { box.on = false; box.timer = (30 + Math.random() * 90) * (U('cajasFrec') ? .6 : 1); }
   }
   function drawBox() {
     if (!box.on) return;
@@ -1299,7 +1379,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     { id: 'bnc',    name: 'Sin caerse',         text: 'Completa una etapa bonus',    prog: () => life.bonusClears, goal: 1 },
   ];
   const achieved = new Set();
-  const achMult = () => 1 + .01 * achieved.size;
+  const achMult = () => 1 + (.01 + upSum('ach')) * achieved.size;
   function checkAch() {
     let got = false;
     ACH.forEach(a => { if (!achieved.has(a.id) && a.prog() >= a.goal) { achieved.add(a.id); got = true; toast(`Logro: ${a.name} (+1% monedas/s)`); } });
@@ -1318,9 +1398,11 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     if (has('arco') && hero.air) {
       bowT -= dt;
       if (bowT <= 0) {
-        bowT = BOW.every;
+        bowT = BOW.every * (U('carcaj') ? .7 : 1);
         const y = GROUND - 14 + hero.y;
-        arrows.push({ x: HERO_X + 6, y, vx: BOW.speed, vy: 30 });
+        const st = U('estabilidad');
+        arrows.push({ x: HERO_X + 6, y, vx: BOW.speed * (st ? 1.3 : 1), vy: st ? 0 : 30 });
+        if (U('triple')) arrows.push({ x: HERO_X + 6, y: y - 2, vx: BOW.speed * (st ? 1.3 : 1), vy: -45 });
         if (has('flechas2')) arrows.push({ x: HERO_X + 6, y: y + 2, vx: BOW.speed * .9, vy: 110 });
       }
     } else bowT = 0;
@@ -1345,7 +1427,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
         }
       }
     }
-    arrows = arrows.filter(a => !a.dead && a.x < W + 10 && a.y < GROUND + 2);
+    arrows = arrows.filter(a => !a.dead && a.x < W + 10 && a.y < GROUND + 2 && a.y > -10);
   }
   function drawArrows() {
     for (const a of arrows) {
@@ -1407,10 +1489,10 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     it.alive = false;
     let amt;
     if (it.type === 'moneda') {
-      amt = (1 + 2 * totalCps()) * buffMult('coin') * dimMult('coin') * (1 + actBonus());
+      amt = (1 + (2 + upSum('coin')) * totalCps()) * buffMult('coin') * dimMult('coin') * (1 + actBonus());
       wallet.moneda += amt; life.coins += amt; bonus.coins += amt;
     } else {
-      amt = (has('almas') && Math.random() < .25 ? 2 : 1) * buffMult('soul') * dimMult('soul') * derived().soul * (1 + actBonus()) * extra;
+      amt = (has('almas') && Math.random() < .25 ? 2 : 1) * buffMult('soul') * dimMult('soul') * derived().soul * (1 + upSum('soul')) * (1 + actBonus()) * extra;
       wallet.moob += amt; life.moobs += amt; bonus.moobs += amt;
     }
     const T = ITEM[it.type];
@@ -1426,6 +1508,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
       const sx = it.wx - scroll;
       if (sx < -12 || sx > W + 12) continue;
       if (Math.abs(sx - HERO_X) < 9 && it.y > top - 5 && it.y < bot) { bonusCollect(it, sx); continue; }
+      if (it.type === 'moneda' && magnetR() && Math.hypot(sx - HERO_X, it.y - (GROUND - 11 + hero.y)) < magnetR()) { bonusCollect(it, sx); continue; }
       if (slash && it.type === 'moob') { const d = Math.hypot(sx - slash.x, it.y - slash.y); if (d < 22) bonusCollect(it, sx); }
     }
     if (hero.y > 40) endBonus(false);
@@ -1490,11 +1573,11 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   function spawnGroup() {
     let g0 = PATTERNS[cfg.pattern]();
     if (UPGRADES.moobs.owned && hordeLeft > 0) { hordeLeft--; g0 = { type: 'moob', count: 5, hk: pick(ALLOWED.moob), gap: randInt(30, 70) }; }
-    else if (UPGRADES.moobs.owned && cfg.pattern === 'grupos' && Math.random() < (D().fx.giant || GIANT.chance)) g0 = { type: 'moob', count: 1, hk: 'bajo', gap: randInt(40, 100), giant: true };
+    else if (UPGRADES.moobs.owned && cfg.pattern === 'grupos' && Math.random() < (D().fx.giant || GIANT.chance) + (U('atraeGig') ? .1 : 0)) g0 = { type: 'moob', count: 1, hk: 'bajo', gap: randInt(40, 100), giant: true };
     stats.n++;
     group = { n: stats.n, ...g0, got: 0, miss: 0, air: 0, done: false };
     const start = scroll + W + 8 + g0.gap;
-    items = Array.from({ length: g0.count }, (_, i) => ({ wx: start + i * SPACING, alive: true, ph: i * .7, hp: g0.giant ? GIANT.hp : 1, hitCd: 0, swing: -1 }));
+    items = Array.from({ length: g0.count }, (_, i) => ({ wx: start + i * SPACING, alive: true, ph: i * .7, hp: g0.giant ? giantHp() : 1, hitCd: 0, swing: -1 }));
     stats.log.unshift(group);
     stats.log.length = Math.min(stats.log.length, 6);
     renderStats();
@@ -1502,7 +1585,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   function spawnGiant() {
     stats.n++;
     group = { n: stats.n, type: 'moob', count: 1, hk: 'bajo', gap: 40, giant: true, got: 0, miss: 0, air: 0, done: false };
-    items = [{ wx: scroll + W + 48, alive: true, ph: 0, hp: GIANT.hp, hitCd: 0, swing: -1 }];
+    items = [{ wx: scroll + W + 48, alive: true, ph: 0, hp: giantHp(), hitCd: 0, swing: -1 }];
     stats.log.unshift(group); stats.log.length = Math.min(stats.log.length, 6);
     renderStats();
   }
@@ -1511,14 +1594,15 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     it.alive = false;
     if (result === 'miss') { group.miss++; stats.miss++; stats.lifeMiss = (stats.lifeMiss || 0) + 1; }
     else {
-      let amt = group.giant ? GIANT.reward : 1;
+      let amt = group.giant ? GIANT.reward * (U('evolucion') ? 2 : 1) : 1;
       if (group.type === 'moneda') {
         if (has('reinversion')) amt += .1 * totalCps();
+        amt += upSum('coin') * totalCps();
         if (Math.random() < derived().double) amt *= 2;
         amt *= buffMult('coin') * dimMult('coin');
       } else {
         if (has('almas') && Math.random() < .25) amt *= 2;
-        amt *= buffMult('soul') * dimMult('soul') * derived().soul;
+        amt *= buffMult('soul') * dimMult('soul') * derived().soul * (1 + upSum('soul'));
         if (result === 'arrow') amt *= 1.5;
         if (group.giant) life.giants++;
       }
@@ -1594,6 +1678,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
       if (!it.alive) continue;
       const sx = it.wx - scroll, cy = itemY(it);
       if (Math.abs(sx - HERO_X) < 9 && cy > top - 5 && cy < bot) { resolve(it, 'ok', sx, cy); continue; }
+      if (group.type === 'moneda' && magnetR() && Math.hypot(sx - HERO_X, cy - (GROUND - 11 + hero.y)) < magnetR()) { resolve(it, 'ok', sx, cy); continue; }
       if (slash) {
         const dx = sx - slash.x, dy = cy - slash.y, dist = Math.hypot(dx, dy), ang = Math.atan2(dy, dx);
         if (dist > 4 && dist < 22 && ang > -1.7 && ang < 0.8) { resolve(it, 'atk', sx, cy); continue; }
@@ -1623,7 +1708,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
           g.beginPath(); g.ellipse(sx, GROUND + 1, 13, 2.2, 0, 0, Math.PI * 2); g.fillStyle = 'rgba(0,0,0,.25)'; g.fill();
           drawMoobV(g, sx, cy + 1, 12.5, D().moob, false, clock * .6 + it.ph);
           rr(g, sx - 11, cy - 21, 22, 3.4, 1.7); g.fillStyle = INK; g.fill();
-          rr(g, sx - 10.3, cy - 20.3, 20.6 * it.hp / GIANT.hp, 2, 1); g.fillStyle = '#ff7a8a'; g.fill();
+          rr(g, sx - 10.3, cy - 20.3, 20.6 * Math.max(0, it.hp) / giantHp(), 2, 1); g.fillStyle = '#ff7a8a'; g.fill();
         } else {
           if (group.hk === 'bajo') { g.beginPath(); g.ellipse(sx, GROUND + .6, 5.5, 1.2, 0, 0, Math.PI * 2); g.fillStyle = 'rgba(0,0,0,.22)'; g.fill(); }
           drawMoobV(g, sx, cy, 5.6, D().moob, group.hk !== 'bajo', clock + it.ph);
@@ -1686,6 +1771,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
 
   // Las listas se arman una vez y luego solo se actualizan sus textos, así los botones no se pierden al hacer clic.
   const built = {};
+  let upFilter = 'disp';
   function renderShop() {
     const d = derived(), cps = totalCps(), money = wallet.moneda;
     document.getElementById('statVida').textContent = d.vida;
@@ -1735,6 +1821,33 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     const hidden = EQUIP.length - [...eqList.querySelectorAll('[data-piece]')].filter(x => !x.hidden).length;
     document.getElementById('eqMore').textContent = hidden > 0 ? `${hidden} piezas más por descubrir (hasta el shuriken).` : 'Tienes a la vista las 18 piezas del arsenal.';
     document.querySelectorAll('[data-qty]').forEach(b => b.setAttribute('aria-pressed', String(String(buyQty) === b.dataset.qty)));
+    // catálogo de mejoras
+    const UL = document.getElementById('upgList');
+    const SHORT = { prod: 'PROD', valor: 'VALOR', logros: '★', almas: 'ALMAS', arco: 'ARCO', caja: '?', enemigos: 'MOOBS', iman: 'IMÁN', otros: '✦' };
+    if (!built.upg) {
+      UL.innerHTML = UPGS.map(u => `<article class="upgrade" data-upg="${u.id}" hidden>
+        <span class="ucat ${u.cat}" aria-hidden="true">${SHORT[u.cat]}</span>
+        <div class="up-body"><h3>${u.name}</h3><p>${u.desc}</p><p class="up-state"></p></div>
+        <div class="up-buy"><span class="price"><i class="dot moneda"></i>${fmt(u.cost)}</span>
+          <button type="button" data-buyupg="${u.id}">Comprar</button></div>
+      </article>`).join('');
+      built.upg = true;
+    }
+    let canCat = false, visibleCount = 0;
+    const F = upFilter;
+    UPGS.forEach(u => {
+      const card = UL.querySelector(`[data-upg="${u.id}"]`), own = U(u.id), ready = upReady(u), falta = u.cost - money;
+      const show = F === 'disp' ? !own && ready : F === 'prox' ? !own && !ready : F === 'own' ? own : F === u.cat;
+      card.hidden = !show; if (show) visibleCount++;
+      card.classList.toggle('owned', own); card.classList.toggle('soon', !own && !ready);
+      card.querySelector('.up-state').textContent = own ? 'Comprada.' : !ready ? `Requisito: ${u.reqText}.` : falta > 0 ? `Te faltan ${fmt(Math.ceil(falta))} ${plural(falta)}.` : '¡Ya te alcanza!';
+      const b = card.querySelector('button'); b.hidden = own; b.disabled = !ready || falta > 0;
+      if (!own && ready && falta <= 0) canCat = true;
+    });
+    const moobCard = document.getElementById('upMoobs'), mo = UPGRADES.moobs.owned;
+    moobCard.hidden = !(F === 'enemigos' || (F === 'disp' && !mo) || (F === 'own' && mo));
+    if (!moobCard.hidden) visibleCount++;
+    document.querySelectorAll('[data-uf]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.uf === F)));
     // mejoras por hitos de nivel
     const msShown = [];
     EQUIP.forEach(e => MILESTONES.forEach((m, t) => { if (e.lv >= m) msShown.push({ e, m, t, key: `${e.id}@${m}` }); }));
@@ -1752,6 +1865,8 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     let canMs = false;
     msShown.forEach(({ e, m, key }) => {
       const card = msList.querySelector(`[data-ms="${key}"]`), own = eqUps.has(key), c = msCost(e, m), falta = c - money;
+      card.hidden = !(F === 'equipo' || (F === 'disp' && !own) || (F === 'own' && own));
+      if (!card.hidden) visibleCount++;
       card.classList.toggle('owned', own);
       card.querySelector('.up-state').textContent = own ? 'Comprada.' : falta > 0 ? `Te faltan ${fmt(Math.ceil(falta))} ${plural(falta)}.` : '¡Ya te alcanza!';
       const b = card.querySelector('button'); b.hidden = own; b.disabled = falta > 0;
@@ -1760,6 +1875,9 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     // pista del próximo hito
     let next = null;
     EQUIP.forEach(e => { if (!e.lv) return; const m = MILESTONES.find(x => e.lv < x); if (m && (!next || m - e.lv < next.m - next.e.lv)) next = { e, m }; });
+    document.getElementById('msHint').hidden = !(F === 'equipo' || F === 'disp');
+    document.getElementById('upEmpty').hidden = visibleCount > 0;
+    document.getElementById('upEmpty').textContent = F === 'disp' ? 'No hay mejoras disponibles ahora. Mira las próximas para ver qué necesitas.' : 'No hay mejoras en este filtro todavía.';
     document.getElementById('msHint').textContent = next
       ? `Próximo hito: ${next.e.name.toLowerCase()} en nivel ${next.m} (te faltan ${next.m - next.e.lv} niveles).`
       : 'Compra equipo para desbloquear mejoras de hito en los niveles 10, 50 y cada 50 hasta 500.';
@@ -1787,7 +1905,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     });
 
     // avisos
-    const canUp = (!UPGRADES.moobs.owned && money >= UPGRADES.moobs.cost) || canMs;
+    const canUp = (!UPGRADES.moobs.owned && money >= UPGRADES.moobs.cost) || canMs || canCat;
     const dots = document.querySelectorAll('#shop .tab .tdot');
     dots[0].hidden = !canEquip; dots[1].hidden = !canUp; dots[2].hidden = !anyQuest;
     document.getElementById('shopBadge').hidden = !(canEquip || canUp || anyQuest);
@@ -1890,8 +2008,8 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     const html = chips.join('');
     const el = document.getElementById('buffs'); if (el.innerHTML !== html) el.innerHTML = html;
     const bb = document.getElementById('btnBoost');
-    bb.textContent = boost.t > 0 ? `Boost · ${Math.ceil(boost.t)} s` : boost.cd > 0 ? `Espera · ${Math.ceil(boost.cd)} s` : `Boost · ${BOOST.cost}`;
-    bb.disabled = boost.cd > 0 || wallet.moneda < BOOST.cost;
+    bb.textContent = boost.t > 0 ? `Boost · ${Math.ceil(boost.t)} s` : boost.cd > 0 ? `Espera · ${Math.ceil(boost.cd)} s` : (boostCfg().cost ? `Boost · ${boostCfg().cost}` : 'Boost · gratis');
+    bb.disabled = boost.cd > 0 || wallet.moneda < boostCfg().cost;
     document.getElementById('btnSilver').hidden = silverBoxes < 1;
     document.getElementById('silverN').textContent = silverBoxes;
   }
@@ -2148,6 +2266,8 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   selectTab(tabs[0]);
   document.querySelectorAll('[data-qty]').forEach(b => b.addEventListener('click', () => { buyQty = b.dataset.qty === 'max' ? 'max' : +b.dataset.qty; renderShop(); }));
   document.getElementById('equipList').addEventListener('click', e => { const b = e.target.closest('[data-equip]'); if (b) buyEquip(b.dataset.equip); });
+  document.getElementById('upgList').addEventListener('click', e => { const b = e.target.closest('[data-buyupg]'); if (b) buyUpg(b.dataset.buyupg); });
+  document.querySelectorAll('[data-uf]').forEach(b => b.addEventListener('click', () => { upFilter = b.dataset.uf; renderShop(); }));
   document.getElementById('milestoneList').addEventListener('click', e => { const b = e.target.closest('[data-buyms]'); if (b) buyMilestone(b.dataset.buyms); });
   document.getElementById('questList').addEventListener('click', e => { const b = e.target.closest('[data-quest]'); if (b) claimQuest(b.dataset.quest); });
   // configuración
@@ -2161,7 +2281,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   document.getElementById('resetNo').addEventListener('click', () => { resetConfirm.hidden = true; resetAsk.hidden = false; resetAsk.focus(); });
   document.getElementById('resetYes').addEventListener('click', () => {
     wallet.moneda = 0; wallet.moob = 0;
-    EQUIP.forEach(e => { e.lv = 0; }); eqUps.clear();
+    EQUIP.forEach(e => { e.lv = 0; }); eqUps.clear(); upOwned.clear();
     UPGRADES.moobs.owned = false; claimed.clear();
     Object.assign(asc, { psBest: 0, psAvail: 0, psTotal: 0, count: 0, usp: 0, uspTotal: 0, ultras: 0, stones: { act: 0, idle: 0 } }); asc.nodes.clear();
     if (bonus.on) { bonus.on = false; document.getElementById('bonusBar').hidden = true; hero.y = 0; hero.air = false; } orb.on = false; orb.timer = 90;
@@ -2223,7 +2343,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
       v: 1, t: Date.now(),
       wallet: { ...wallet },
       equip: Object.fromEntries(EQUIP.map(e => [e.id, e.lv])),
-      eqUps: [...eqUps],
+      eqUps: [...eqUps], upgs: [...upOwned],
       moobs: UPGRADES.moobs.owned,
       claimed: [...claimed],
       asc: { ...asc, nodes: [...asc.nodes], stones: { ...asc.stones } },
@@ -2247,6 +2367,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     wallet.moneda = num(d.wallet?.moneda); wallet.moob = num(d.wallet?.moob);
     EQUIP.forEach(e => { e.lv = Math.floor(num(d.equip?.[e.id])); });
     UPGRADES.moobs.owned = !!d.moobs;
+    upOwned.clear(); (d.upgs || []).forEach(id => { if (UPGS.some(u => u.id === id)) upOwned.add(id); });
     eqUps.clear(); (d.eqUps || []).forEach(k => { const [id, m] = String(k).split('@'); if (EQUIP.some(e => e.id === id) && MILESTONES.includes(+m)) eqUps.add(k); });
     claimed.clear(); (d.claimed || []).forEach(id => { if (QUESTS.some(q => q.id === id)) claimed.add(id); });
     const fl = freshLife();
