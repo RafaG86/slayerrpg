@@ -1,0 +1,831 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Moobs Slayer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: one arcade-cabinet column — the live stage on top, controls under it, then the hero's sheet (custom colors, base stats, sprite frames). Single committed dusk look. */
+:root {
+  --night: #15111f;
+  --panel: #1f1930;
+  --line: #352c4d;
+  --ink: #efe9ff;
+  --dim: #a99fc4;
+  --ember: #ffb347;
+  --mint: #6fe3c1;
+  --f-display: "Pixelify Sans", "Courier New", monospace;
+  --f-body: "Atkinson Hyperlegible", system-ui, sans-serif;
+  color-scheme: dark;
+}
+html, body { background: var(--night); color: var(--ink); }
+body { font-family: var(--f-body); font-size: 15px; line-height: 1.5; padding: 20px 16px 40px; }
+.wrap { max-width: 980px; margin: 0 auto; display: grid; gap: 20px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; }
+h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(28px, 6vw, 44px); margin: 0; letter-spacing: .02em; line-height: 1; }
+h1 span { color: var(--ember); }
+.tag { font-family: var(--f-display); color: var(--dim); font-size: 14px; letter-spacing: .08em; text-transform: uppercase; }
+.stage { position: relative; border: 3px solid var(--line); border-radius: 6px; overflow: hidden; background: #000; box-shadow: 0 0 0 3px var(--night), 0 18px 40px rgba(0,0,0,.45); }
+#game { display: block; width: 100%; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; touch-action: manipulation; cursor: pointer; }
+.hud { position: absolute; left: 10px; top: 8px; font-family: var(--f-display); font-size: clamp(11px, 2.4vw, 16px); color: var(--ink); text-shadow: 2px 2px 0 #000; pointer-events: none; }
+.hud b { color: var(--ember); font-weight: 700; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+button { font-family: var(--f-display); font-size: 17px; font-weight: 700; color: var(--night); background: var(--ember); border: 0; border-radius: 4px; padding: 10px 18px; cursor: pointer; box-shadow: 0 4px 0 #b06f1c; transition: transform .06s; }
+button:active { transform: translateY(3px); box-shadow: 0 1px 0 #b06f1c; }
+button.alt { background: var(--mint); box-shadow: 0 4px 0 #2f9a7c; }
+button.ghost { background: var(--panel); color: var(--ink); box-shadow: 0 4px 0 var(--line); }
+.upgrades { display: grid; gap: 12px; }
+.upgrade { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; background: var(--night); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; }
+.upgrade.owned { border-color: var(--mint); }
+#upIcon { width: 42px; height: 42px; image-rendering: pixelated; }
+.up-body { min-width: 0; }
+.up-body h3 { font-family: var(--f-display); font-size: 18px; margin: 0; }
+.up-body p { margin: 2px 0 0; color: var(--dim); font-size: 14px; }
+.up-body .up-state { color: var(--ember); font-size: 13px; }
+.upgrade.owned .up-state { color: var(--mint); }
+.up-buy { display: grid; gap: 6px; justify-items: end; }
+.price { font-family: var(--f-display); font-size: 18px; }
+.upgrade.owned .price { text-decoration: line-through; color: var(--dim); }
+button:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+@media (max-width: 520px) { .upgrade { grid-template-columns: auto minmax(0, 1fr); } .up-buy { grid-column: 1 / -1; grid-template-columns: auto auto; justify-content: start; align-items: center; } }
+.dev { flex-wrap: wrap; }
+.dev { display: flex; align-items: center; gap: 10px; border: 2px dashed var(--line); border-radius: 6px; padding: 6px 10px 8px; }
+.dev-tag { font-family: var(--f-display); font-size: 12px; letter-spacing: .1em; color: var(--night); background: #ff8fb8; border-radius: 3px; padding: 1px 6px; }
+button.devbtn { background: #ff8fb8; box-shadow: 0 4px 0 #b0496f; font-size: 15px; padding: 8px 14px; }
+button.devbtn:active { box-shadow: 0 1px 0 #b0496f; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+.keys { color: var(--dim); font-size: 13px; margin-left: auto; }
+kbd { font-family: var(--f-display); background: var(--panel); border: 1px solid var(--line); border-bottom-width: 3px; border-radius: 3px; padding: 0 5px; color: var(--ink); }
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+@media (max-width: 720px) { .grid { grid-template-columns: minmax(0, 1fr); } .keys { margin-left: 0; } }
+section.card { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; display: grid; gap: 14px; align-content: start; min-width: 0; }
+h2 { font-family: var(--f-display); font-size: 20px; margin: 0; font-weight: 700; }
+h2 small { font-family: var(--f-body); color: var(--dim); font-size: 13px; font-weight: 400; margin-left: 6px; }
+.field { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; }
+.field label { color: var(--dim); }
+input[type=color] { width: 46px; height: 32px; border: 2px solid var(--line); border-radius: 4px; background: var(--night); padding: 2px; cursor: pointer; }
+input[type=text] { font-family: var(--f-display); font-size: 17px; background: var(--night); color: var(--ink); border: 2px solid var(--line); border-radius: 4px; padding: 6px 10px; width: 100%; box-sizing: border-box; }
+.presets { display: flex; flex-wrap: wrap; gap: 8px; }
+.presets button { font-size: 14px; padding: 6px 10px; }
+.stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.stats div { background: var(--night); border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; }
+.stats dt { color: var(--dim); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+.stats dd { margin: 0; font-family: var(--f-display); font-size: 22px; font-variant-numeric: tabular-nums; }
+.note { color: var(--dim); font-size: 13px; margin: 0; }
+.sheet-wrap { overflow-x: auto; background: var(--night); border: 1px solid var(--line); border-radius: 4px; }
+#sheet { display: block; image-rendering: pixelated; }
+.roadmap { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.roadmap li::marker { color: var(--ember); font-family: var(--f-display); }
+.roadmap .done { color: var(--mint); }
+.roadmap .now { color: var(--ember); }
+select { font-family: var(--f-body); font-size: 15px; background: var(--night); color: var(--ink); border: 2px solid var(--line); border-radius: 4px; padding: 6px 8px; width: 100%; box-sizing: border-box; }
+input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
+.check { display: flex; align-items: center; gap: 8px; color: var(--dim); cursor: pointer; }
+.check input { accent-color: var(--ember); width: 18px; height: 18px; }
+.respawn { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+@media (max-width: 820px) { .respawn { grid-template-columns: minmax(0, 1fr); } }
+.respawn > div { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.stats.four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.log { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-variant-numeric: tabular-nums; }
+.log li { display: grid; grid-template-columns: 30px 56px minmax(0,1fr) auto; gap: 8px; align-items: center; background: var(--night); border: 1px solid var(--line); border-radius: 4px; padding: 5px 8px; font-size: 13px; }
+.log .what { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.log .n { color: var(--dim); font-family: var(--f-display); }
+.log .res { font-family: var(--f-display); }
+.log .ok { color: var(--mint); } .log .part { color: var(--ember); }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: 0; border: 1px solid #1a1423; }
+.dot.moob { background: #f2c14e; } .dot.moneda { background: #d9e2ec; width: 7px; height: 7px; } .log .atk { color: #ff8fb8; } .log .miss { color: #ff7a8a; } .log .wait { color: var(--dim); }
+.pill { font-family: var(--f-display); font-size: 12px; border-radius: 3px; padding: 1px 6px; text-align: center; color: var(--night); }
+.pill.bajo { background: var(--mint); } .pill.medio { background: var(--ember); } .pill.alto { background: #ff8fb8; }
+.empty { color: var(--dim); font-size: 14px; }
+@media (prefers-reduced-motion: reduce) { button { transition: none; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Moobs <span>Slayer</span></h1>
+    <div class="tag">Fase 2 · Moobs y monedas</div>
+  </header>
+
+  <div class="stage">
+    <canvas id="game" width="240" height="135" aria-label="Escenario: el héroe corriendo solo por una plataforma 2D"></canvas>
+    <div class="hud"><span id="hudName">Slayer</span> · Monedas <b id="hudCoins">0</b> <span id="hudMoobsWrap" hidden>· Moobs <b id="hudMoobs">0</b></span> · Estado: <b id="hudState">Corriendo</b></div>
+  </div>
+
+  <div class="controls">
+    <button id="btnJump" type="button">Saltar</button>
+    <button id="btnAttack" type="button" class="alt">Atacar</button>
+    <button id="btnRun" type="button" class="ghost">Detener</button>
+    <div class="dev" title="Solo para desarrollo: los jugadores recogen los moobs saltando">
+      <span class="dev-tag">DEV</span>
+      <button id="btnAerial" type="button" class="devbtn">Ataque en altura</button>
+    </div>
+    <span class="keys"><kbd>Espacio</kbd> saltar · <kbd>J</kbd> atacar · <kbd>K</kbd> ataque en altura · <kbd>P</kbd> correr/detener</span>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Aspecto</h2>
+      <div class="field" style="grid-template-columns:1fr">
+        <label for="heroName">Nombre del héroe</label>
+        <input id="heroName" type="text" maxlength="14" value="Slayer">
+      </div>
+      <div class="field"><label for="cCape">Capa y bufanda</label><input id="cCape" type="color" value="#d6455d"></div>
+      <div class="field"><label for="cHood">Capucha</label><input id="cHood" type="color" value="#3b4a8c"></div>
+      <div class="field"><label for="cArmor">Armadura</label><input id="cArmor" type="color" value="#9aa6c2"></div>
+      <div class="field"><label for="cSkin">Piel</label><input id="cSkin" type="color" value="#f0c39a"></div>
+      <div class="field"><label for="cBlade">Hoja de la espada</label><input id="cBlade" type="color" value="#dfeaf5"></div>
+      <div class="presets" aria-label="Combinaciones rápidas">
+        <button type="button" class="ghost" data-preset="0">Clásico</button>
+        <button type="button" class="ghost" data-preset="1">Bosque</button>
+        <button type="button" class="ghost" data-preset="2">Sombra</button>
+        <button type="button" class="ghost" data-preset="3">Dorado</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Ficha <small>valores base, se usarán en la jugabilidad</small></h2>
+      <dl class="stats">
+        <div><dt>Vida</dt><dd>100</dd></div>
+        <div><dt>Ataque</dt><dd>10</dd></div>
+        <div><dt>Velocidad</dt><dd>1.0×</dd></div>
+        <div><dt>Moobs</dt><dd id="statMoobs">0</dd></div>
+        <div><dt>Monedas</dt><dd id="statCoins">0</dd></div>
+        <div><dt>Nivel</dt><dd>1</dd></div>
+      </dl>
+      <h2>Próximas fases</h2>
+      <ol class="roadmap">
+        <li class="done">Personaje: diseño y animaciones</li>
+        <li class="now">Recoger moobs y monedas (en pruebas)</li>
+        <li>Enemigos y combate automático</li>
+        <li>Tienda de equipo y progreso</li>
+      </ol>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>Mejoras <small>se compran con monedas</small></h2>
+    <div class="upgrades">
+      <article class="upgrade" id="upMoobs">
+        <canvas id="upIcon" width="14" height="14" aria-hidden="true"></canvas>
+        <div class="up-body">
+          <h3>Llegan los moobs</h3>
+          <p>Desbloquea los moobs. Empiezan a aparecer junto a las monedas, en grupos de 1 a 3 y a cualquier altura.</p>
+          <p class="up-state" id="upState"></p>
+        </div>
+        <div class="up-buy">
+          <span class="price"><i class="dot moneda"></i>10</span>
+          <button type="button" id="buyMoobs" disabled>Comprar</button>
+        </div>
+      </article>
+      <div class="dev">
+        <span class="dev-tag">DEV</span>
+        <button type="button" class="devbtn" id="devCoins">+10 monedas</button>
+        <button type="button" class="devbtn" id="devUnlock">Desbloquear gratis</button>
+        <button type="button" class="devbtn" id="devLock" hidden>Bloquear de nuevo</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Patrones de aparición <small>un grupo a la vez, para estudiar y mejorar los patrones</small></h2>
+    <div class="respawn">
+      <div>
+        <div class="field" style="grid-template-columns:1fr"><label for="pattern">Patrón de aparición</label>
+          <select id="pattern">
+            <option value="grupos">Grupos 1-2-3: monedas (y moobs si están desbloqueados)</option>
+            <option value="fijo">Fijo: 1 objeto, lo más bajo posible</option>
+            <option value="alterno">Alterno: 1 objeto, bajo, alto, bajo…</option>
+            <option value="aleatorio">Aleatorio: 1 objeto, altura y distancia al azar</option>
+          </select>
+        </div>
+        <div class="field"><label for="delay">Espera tras recoger o perder: <b id="delayOut">1.0 s</b></label><input id="delay" type="range" min="0" max="3" step="0.25" value="1"></div>
+        <label class="check" for="guides"><input id="guides" type="checkbox" checked> Mostrar guías de altura y flecha del próximo grupo</label>
+        <p class="note">Al empezar solo aparecen monedas; los moobs se suman al comprar su mejora. En el patrón base cada grupo es de un solo tipo (<i class="dot moob"></i>moobs o <i class="dot moneda"></i>monedas), con 1, 2 o 3 en fila a la misma altura. Los moobs pueden salir a cualquier altura; las monedas siempre van por encima del piso (medio o alto). Alturas: <span class="pill bajo">bajo</span> se recoge corriendo, <span class="pill medio">medio</span> pide un salto corto y <span class="pill alto">alto</span> un salto completo.</p>
+      </div>
+      <div>
+        <dl class="stats four">
+          <div><dt>Recogidos</dt><dd id="sGot">0</dd></div>
+          <div><dt>Perdidos</dt><dd id="sMiss">0</dd></div>
+          <div><dt>Acierto</dt><dd id="sRate">–</dd></div>
+          <div><dt>Próximo</dt><dd id="sNext">–</dd></div>
+        </dl>
+        <button type="button" class="ghost" id="resetStats">Reiniciar contadores</button>
+      </div>
+      <div>
+        <h2 style="font-size:16px">Últimos grupos</h2>
+        <ul class="log" id="log"><li class="empty" style="display:block">Aún no aparece ningún grupo.</li></ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Hoja de sprites <small>todos los cuadros de animación</small></h2>
+    <div class="sheet-wrap"><canvas id="sheet"></canvas></div>
+    <p class="note">Correr: 6 cuadros · Quieto: 4 · Saltar: 2 · Atacar: 5. Cada sprite mide 40×40 píxeles.</p>
+  </section>
+</div>
+
+<script>
+(() => {
+  // ---------- color helpers ----------
+  const hexToRgb = h => { h = h.replace('#',''); return [0,2,4].map(i => parseInt(h.substr(i,2),16)); };
+  const rgbToHex = (r,g,b) => '#' + [r,g,b].map(v => Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
+  const shade = (hex, amt) => { const [r,g,b] = hexToRgb(hex); return amt < 0 ? rgbToHex(r*(1+amt), g*(1+amt), b*(1+amt)) : rgbToHex(r+(255-r)*amt, g+(255-g)*amt, b+(255-b)*amt); };
+
+  const PRESETS = [
+    { cape:'#d6455d', hood:'#3b4a8c', armor:'#9aa6c2', skin:'#f0c39a', blade:'#dfeaf5' },
+    { cape:'#4f9a4a', hood:'#6b4a2e', armor:'#b8a87a', skin:'#d9a27a', blade:'#e6f2dc' },
+    { cape:'#2a2440', hood:'#121019', armor:'#5d5a75', skin:'#c48a6a', blade:'#b48cff' },
+    { cape:'#f2f2f2', hood:'#c9962a', armor:'#e8c85a', skin:'#f3cfa8', blade:'#fff3b0' },
+  ];
+  const ids = { cape:'cCape', hood:'cHood', armor:'cArmor', skin:'cSkin', blade:'cBlade' };
+  let colors = { ...PRESETS[0] };
+  let heroName = 'Slayer';
+  try {
+    const saved = JSON.parse(localStorage.getItem('moobs-hero') || 'null');
+    if (saved) { colors = { ...colors, ...saved.colors }; heroName = saved.name || heroName; }
+  } catch (e) {}
+
+  const OUTLINE = [26, 20, 35];
+  let palette;
+  function buildPalette() {
+    palette = {
+      cape: colors.cape, capeS: shade(colors.cape, -.35),
+      hood: colors.hood, hoodL: shade(colors.hood, .25), hoodS: shade(colors.hood, -.3),
+      armor: colors.armor, armorS: shade(colors.armor, -.3), armorL: shade(colors.armor, .35),
+      skin: colors.skin, skinS: shade(colors.skin, -.2),
+      blade: colors.blade, bladeS: shade(colors.blade, -.3), bladeL: '#ffffff',
+      pants: '#3a3352', pantsS: '#2a2440', boot: '#5a3b2b', bootS: '#3f281d',
+      belt: '#4a3324', gold: '#f2c14e', eye: '#1a1423', grip: '#6b4a2e',
+    };
+    frameCache.clear();
+  }
+
+  // ---------- animation data ----------
+  const ANIMS = {
+    run: { fps: 12, frames: [
+      { fx: 3, fl: 0, bx:-3, bl: 0, b: 0 },
+      { fx: 2, fl: 0, bx:-2, bl: 2, b: 1 },
+      { fx: 0, fl: 1, bx: 0, bl: 3, b: 1 },
+      { fx:-3, fl: 0, bx: 3, bl: 0, b: 0 },
+      { fx:-2, fl: 2, bx: 2, bl: 0, b: 1 },
+      { fx: 0, fl: 3, bx: 0, bl: 1, b: 1 },
+    ]},
+    idle: { fps: 5, frames: [
+      { fx: 1, fl: 0, bx:-1, bl: 0, b: 0 },
+      { fx: 1, fl: 0, bx:-1, bl: 0, b: 0 },
+      { fx: 1, fl: 0, bx:-1, bl: 0, b: 1 },
+      { fx: 1, fl: 0, bx:-1, bl: 0, b: 1 },
+    ]},
+    jump: { fps: 1, frames: [
+      { fx: 2, fl: 3, bx:-1, bl: 2, b: 0 },
+      { fx: 1, fl: 0, bx:-2, bl: 1, b: 0 },
+    ]},
+    attack: { fps: 18, frames: [
+      { a:-2.2, hx:19, hy:25 },
+      { a:-1.4, hx:20, hy:24 },
+      { a:-0.4, hx:22, hy:26, slash:[-1.3, -0.2] },
+      { a: 0.5, hx:22, hy:28, slash:[-1.3, 0.5] },
+      { a: 0.9, hx:21, hy:29 },
+    ]},
+  };
+
+  const S = 40; // sprite cell size
+  const frameCache = new Map();
+
+  function drawSprite(state, f, legPose) {
+    const key = state + f + (legPose ? JSON.stringify(legPose) : '');
+    if (frameCache.has(key)) return frameCache.get(key);
+    const cv = document.createElement('canvas'); cv.width = S; cv.height = S;
+    const c = cv.getContext('2d');
+    const P = palette;
+    const p = (x, y, w, h, col) => { c.fillStyle = col; c.fillRect(Math.round(x), Math.round(y), w, h); };
+
+    const atk = state === 'attack' ? ANIMS.attack.frames[f] : null;
+    const pose = legPose || (atk ? ANIMS.run.frames[0] : ANIMS[state].frames[f]);
+    const b = pose.b;
+    const hipY = 31 + b;
+
+    // cape (behind everything)
+    const t = f * 1.1;
+    let cols, droop, len;
+    if (state === 'idle') { cols = 3; droop = 1.6; len = 6; }
+    else if (state === 'jump') { cols = 5; droop = f === 0 ? 1.2 : -0.4; len = 5; }
+    else { cols = 6; droop = 0.45; len = 4; }
+    for (let i = 0; i < cols; i++) {
+      const x = 14 - i;
+      const wave = Math.round(Math.sin(t + i * 0.9) * (state === 'idle' ? 0.6 : 1));
+      const top = 24 + b + Math.floor(i * droop) + (i > 0 ? wave : 0);
+      const L = len + (i < 2 ? 1 : 0);
+      p(x, top, 1, L, P.cape);
+      p(x, top + L - 1, 1, 1, P.capeS);
+    }
+
+    // legs
+    const leg = (hipX, dx, lift, pants, boot) => {
+      const fxp = hipX + dx;
+      const mid = Math.round(hipX + dx / 2);
+      const bootTop = 36 - lift;
+      p(hipX, hipY, 2, 2, pants);
+      if (hipY + 2 < bootTop) p(mid, hipY + 2, 2, Math.max(1, Math.min(2, bootTop - hipY - 2)), pants);
+      if (hipY + 4 < bootTop) p(fxp, hipY + 4, 2, bootTop - hipY - 4, pants);
+      p(fxp, bootTop, 3, 2, boot);
+    };
+    leg(16, pose.bx, pose.bl, P.pantsS, P.bootS);
+
+    // torso
+    p(15, 25 + b, 6, 6, P.armor);
+    p(15, 25 + b, 1, 6, P.armorS);
+    p(17, 26 + b, 2, 1, P.armorL);
+    p(15, 29 + b, 6, 1, P.belt);
+    p(19, 29 + b, 1, 1, P.gold);
+
+    leg(19, pose.fx, pose.fl, P.pants, P.boot);
+
+    // head + hood
+    p(16, 20 + b, 5, 4, P.skin);
+    p(16, 23 + b, 1, 1, P.skinS);
+    p(14, 18 + b, 7, 2, P.hood);
+    p(15, 18 + b, 4, 1, P.hoodL);
+    p(14, 20 + b, 2, 4, P.hood);
+    p(14, 22 + b, 1, 2, P.hoodS);
+    p(13, 19 + b, 1, 3, P.hood);
+    p(12, 20 + b, 1, 2, P.hoodS);
+    p(20, 20 + b, 1, 1, P.hood);
+    p(19, 21 + b, 1, 2, P.eye);
+    // scarf
+    p(15, 24 + b, 6, 1, P.cape);
+    p(14, 24 + b, 1, 2, P.capeS);
+
+    // arm + sword
+    let a, hx, hy;
+    if (atk) { a = atk.a; hx = atk.hx; hy = atk.hy; }
+    else if (state === 'idle') { a = -1.35; hx = 21; hy = 29 + b; }
+    else if (state === 'jump') { a = -0.5; hx = 22; hy = 26; }
+    else { a = -0.9; hx = 21; hy = 29 + b; }
+    const sx = 19, sy = 26 + b;
+    const steps = Math.max(Math.abs(hx - sx), Math.abs(hy - sy));
+    for (let i = 0; i <= steps; i++) {
+      const k = steps ? i / steps : 0;
+      p(sx + (hx - sx) * k, sy + (hy - sy) * k, 2, 2, P.armorS);
+    }
+    const ca = Math.cos(a), sa = Math.sin(a);
+    // grip
+    for (let i = -2; i <= 0; i++) p(hx + ca * i, hy + sa * i, 1, 1, P.grip);
+    // guard
+    p(hx + ca - sa, hy + sa + ca, 1, 1, P.gold);
+    p(hx + ca + sa, hy + sa - ca, 1, 1, P.gold);
+    p(hx + ca, hy + sa, 1, 1, P.gold);
+    // blade
+    for (let i = 2; i <= 11; i++) {
+      p(hx + ca * i, hy + sa * i, 1, 1, i === 11 ? P.bladeL : P.blade);
+      if (i < 10) p(hx + ca * i - sa * 0.9, hy + sa * i + ca * 0.9, 1, 1, P.bladeS);
+    }
+    // fist
+    p(hx, hy, 2, 2, P.skin);
+
+    // outline pass
+    const img = c.getImageData(0, 0, S, S), d = img.data;
+    const solid = i => d[i * 4 + 3] > 0;
+    const mark = [];
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+      const i = y * S + x;
+      if (solid(i)) continue;
+      if ((x > 0 && solid(i - 1)) || (x < S - 1 && solid(i + 1)) || (y > 0 && solid(i - S)) || (y < S - 1 && solid(i + S))) mark.push(i);
+    }
+    for (const i of mark) { d[i*4] = OUTLINE[0]; d[i*4+1] = OUTLINE[1]; d[i*4+2] = OUTLINE[2]; d[i*4+3] = 255; }
+    c.putImageData(img, 0, 0);
+
+    // slash arc (after outline so it glows)
+    if (atk && atk.slash) {
+      const [a0, a1] = atk.slash;
+      for (let ang = a0; ang <= a1; ang += 0.04) {
+        const prog = (ang - a0) / (a1 - a0);
+        const thick = prog > 0.15 && prog < 0.85 ? 3 : 2;
+        for (let r = 13; r < 13 + thick; r++) {
+          c.fillStyle = r === 13 ? '#ffffff' : P.blade;
+          c.globalAlpha = r === 13 ? 1 : 0.7;
+          c.fillRect(Math.round(17 + Math.cos(ang) * r), Math.round(27 + Math.sin(ang) * r), 1, 1);
+        }
+      }
+      c.globalAlpha = 1;
+    }
+
+    frameCache.set(key, cv);
+    return cv;
+  }
+
+  // ---------- stage ----------
+  const game = document.getElementById('game');
+  const g = game.getContext('2d');
+  g.imageSmoothingEnabled = false;
+  const W = 240, H = 135, GROUND = 108, HERO_X = 64;
+
+  // deterministic noise for scenery
+  const rnd = n => { const x = Math.sin(n * 127.1) * 43758.5453; return x - Math.floor(x); };
+
+  const hero = { running: true, y: 0, vy: 0, air: false, atkT: -1, animT: 0, aerial: false, pendingAerial: false };
+  let scroll = 0, dust = [];
+
+  function jump() { if (!hero.air) { hero.vy = -215; hero.air = true; for (let i = 0; i < 5; i++) dust.push({ x: HERO_X + rnd(i + scroll) * 8 - 4, y: GROUND, vx: -20 - rnd(i) * 30, vy: -10 - rnd(i * 3) * 20, life: .5 }); } }
+  function attack() { if (hero.atkT < 0) { hero.atkT = 0; hero.aerial = false; } }
+  // DEV: salta y lanza el corte cerca del punto más alto; este corte sí recoge moobs
+  function aerialAttack() {
+    if (hero.atkT >= 0) return;
+    if (hero.air) { hero.atkT = 0; hero.aerial = true; }
+    else { jump(); hero.pendingAerial = true; }
+  }
+  function toggleRun() { hero.running = !hero.running; btnRun.textContent = hero.running ? 'Detener' : 'Correr'; }
+
+  function drawSky() {
+    const grd = g.createLinearGradient(0, 0, 0, GROUND);
+    grd.addColorStop(0, '#2b1f4a'); grd.addColorStop(.55, '#6b3c6e'); grd.addColorStop(1, '#e0805a');
+    g.fillStyle = grd; g.fillRect(0, 0, W, GROUND);
+    // sun
+    g.fillStyle = '#ffd59a'; g.beginPath(); g.arc(178, 66, 17, 0, Math.PI * 2); g.fill();
+    g.fillStyle = 'rgba(255,213,154,.25)'; g.beginPath(); g.arc(178, 66, 23, 0, Math.PI * 2); g.fill();
+    // stars
+    g.fillStyle = '#efe9ff';
+    for (let i = 0; i < 26; i++) { const x = (rnd(i) * W - scroll * .02 + W * 4) % W; const y = rnd(i + 50) * 45; if ((i + Math.floor(performance.now() / 600)) % 7) g.fillRect(x | 0, y | 0, 1, 1); }
+  }
+  function drawRidge(speed, base, amp, col, seed) {
+    g.fillStyle = col;
+    const off = scroll * speed;
+    for (let x = 0; x < W; x++) {
+      const wx = x + off;
+      const h = Math.sin(wx * .021 + seed) * amp + Math.sin(wx * .053 + seed * 2) * amp * .45 + Math.sin(wx * .007 + seed) * amp * .8;
+      g.fillRect(x, (base - h) | 0, 1, GROUND - base + h + 1);
+    }
+  }
+  function drawTrees(speed, col, scale, seed) {
+    const off = scroll * speed, spacing = 22 * scale;
+    const first = Math.floor(off / spacing) - 1;
+    g.fillStyle = col;
+    for (let i = first; i < first + W / spacing + 3; i++) {
+      if (rnd(i + seed) < .25) continue;
+      const x = Math.round(i * spacing - off + rnd(i * 7 + seed) * 10);
+      const h = Math.round((18 + rnd(i * 3 + seed) * 16) * scale);
+      const w = Math.round(h * .45);
+      for (let r = 0; r < h; r++) { const half = Math.max(1, Math.round((r / h) * w)); g.fillRect(x - half, GROUND - 6 * scale - h + r, half * 2, 1); }
+      g.fillRect(x - 1, GROUND - 6 * scale, 2, 6 * scale);
+    }
+  }
+  function drawGround() {
+    const off = Math.floor(scroll) % 16;
+    g.fillStyle = '#3d2a3f'; g.fillRect(0, GROUND, W, H - GROUND);
+    for (let x = -16; x < W + 16; x += 16) {
+      const tx = x - off;
+      const ti = Math.floor((x + Math.floor(scroll)) / 16);
+      g.fillStyle = '#4c3550'; g.fillRect(tx + 1, GROUND + 8, 14, 6);
+      g.fillStyle = '#33233a'; g.fillRect(tx, GROUND + 15, 16, 1);
+      if (rnd(ti) > .6) { g.fillStyle = '#5c4466'; g.fillRect(tx + 4 + (rnd(ti * 2) * 8 | 0), GROUND + 20, 3, 2); }
+      g.fillStyle = '#4f9a6a'; g.fillRect(tx, GROUND, 16, 3);
+      g.fillStyle = '#7fd08f'; g.fillRect(tx, GROUND, 16, 1);
+      g.fillStyle = '#4f9a6a'; if (rnd(ti + 9) > .4) g.fillRect(tx + (rnd(ti + 3) * 13 | 0), GROUND - 2, 1, 2);
+      g.fillStyle = '#2f6b4a'; g.fillRect(tx, GROUND + 3, 16, 1);
+    }
+  }
+
+  // ---------- moob ----------
+  const moobFrames = [];
+  function outline(c, size) {
+    const img = c.getImageData(0, 0, size, size), d = img.data, mark = [];
+    const solid = i => d[i * 4 + 3] > 0;
+    for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+      const i = y * size + x; if (solid(i)) continue;
+      if ((x > 0 && solid(i - 1)) || (x < size - 1 && solid(i + 1)) || (y > 0 && solid(i - size)) || (y < size - 1 && solid(i + size))) mark.push(i);
+    }
+    for (const i of mark) { d[i*4] = OUTLINE[0]; d[i*4+1] = OUTLINE[1]; d[i*4+2] = OUTLINE[2]; d[i*4+3] = 255; }
+    c.putImageData(img, 0, 0);
+  }
+  [1, .7, .3, .7].forEach(k => {
+    const cv = document.createElement('canvas'); cv.width = cv.height = 14;
+    const c = cv.getContext('2d');
+    for (let y = 0; y < 10; y++) {
+      const hw = Math.max(.6, Math.sqrt(Math.max(0, 25 - (y - 4.5) ** 2)) * k);
+      const x0 = Math.round(7 - hw), x1 = Math.round(7 + hw), w = Math.max(1, x1 - x0);
+      c.fillStyle = '#f2c14e'; c.fillRect(x0, y + 2, w, 1);
+      c.fillStyle = '#c4862a'; c.fillRect(x0 + w - 1, y + 2, 1, 1);
+      if (y > 0 && y < 6 && k > .5) { c.fillStyle = '#fff1a8'; c.fillRect(x0 + 1, y + 2, 1, 1); }
+    }
+    if (k === 1) {
+      c.fillStyle = '#8a4b12';
+      ['10001', '11011', '10101', '10001', '10001'].forEach((r, ry) => [...r].forEach((ch, rx) => { if (ch === '1') c.fillRect(5 + rx, 5 + ry, 1, 1); }));
+    }
+    outline(c, 14);
+    moobFrames.push(cv);
+  });
+
+  // moneda: plateada, más pequeña, con un rombo
+  const coinFrames = [];
+  [1, .7, .3, .7].forEach(k => {
+    const cv = document.createElement('canvas'); cv.width = cv.height = 14;
+    const c = cv.getContext('2d'), R = 4;
+    for (let y = 0; y < R * 2; y++) {
+      const hw = Math.max(.6, Math.sqrt(Math.max(0, R * R - (y - R + .5) ** 2)) * k);
+      const x0 = Math.round(7 - hw), x1 = Math.round(7 + hw), w = Math.max(1, x1 - x0);
+      c.fillStyle = '#d9e2ec'; c.fillRect(x0, y + 7 - R, w, 1);
+      c.fillStyle = '#8a9bb0'; c.fillRect(x0 + w - 1, y + 7 - R, 1, 1);
+      if (y > 0 && y < 4 && k > .5) { c.fillStyle = '#ffffff'; c.fillRect(x0 + 1, y + 7 - R, 1, 1); }
+    }
+    if (k === 1) { c.fillStyle = '#5b6b82'; c.fillRect(6, 6, 2, 2); c.fillRect(7, 5, 1, 1); c.fillRect(6, 8, 1, 1); }
+    outline(c, 14);
+    coinFrames.push(cv);
+  });
+
+  const HEIGHTS = { bajo: 9, medio: 30, alto: 46 };
+  const HCOL = { bajo: '#6fe3c1', medio: '#ffb347', alto: '#ff8fb8' };
+  const ITEM = {
+    moob:   { name: 'moob',   plural: 'moobs',   frames: moobFrames, glow: 'rgba(255,213,120,.2)', spark: '255,225,140', text: '#ffe08a' },
+    moneda: { name: 'moneda', plural: 'monedas', frames: coinFrames, glow: 'rgba(200,220,255,.18)', spark: '220,232,255', text: '#e6eefc' },
+  };
+  // Regla: las monedas siempre van por encima del piso; los moobs pueden ir a cualquier altura.
+  const ALLOWED = { moob: ['bajo', 'medio', 'alto'], moneda: ['medio', 'alto'] };
+  const SPACING = 14; // px entre objetos de un mismo grupo
+  const pick = arr => arr[Math.random() * arr.length | 0];
+  const randInt = (a, b) => a + (Math.random() * (b - a + 1) | 0);
+
+  // Cada patrón devuelve el próximo grupo: { type, count, hk, gap }.
+  // Para mejorar los patrones más adelante basta con agregar una entrada aquí.
+  const PATTERNS = {
+    grupos:    () => { const type = pickType(); return { type, count: randInt(1, 3), hk: pick(ALLOWED[type]), gap: randInt(30, 120) }; },
+    fijo:      () => { const type = pickType(); return { type, count: 1, hk: ALLOWED[type][0], gap: 60 }; },
+    alterno:   () => { altHigh = !altHigh; const type = pickType(); return { type, count: 1, hk: altHigh ? ALLOWED[type][0] : 'alto', gap: 80 }; },
+    aleatorio: () => { const type = pickType(); return { type, count: 1, hk: pick(ALLOWED[type]), gap: randInt(20, 160) }; },
+  };
+
+  // ---------- mejoras ----------
+  // Al empezar solo aparecen monedas; los moobs se desbloquean comprando la mejora.
+  const UPGRADES = { moobs: { cost: 10, owned: false } };
+  const pickType = () => UPGRADES.moobs.owned ? pick(['moob', 'moneda']) : 'moneda';
+  function buyMoobs(free) {
+    const u = UPGRADES.moobs;
+    if (u.owned) return;
+    if (!free) { if (wallet.moneda < u.cost) return; wallet.moneda -= u.cost; }
+    u.owned = true;
+    renderStats();
+  }
+  function lockMoobs() { UPGRADES.moobs.owned = false; wallet.moob = 0; renderStats(); }
+  function renderUpgrade() {
+    const u = UPGRADES.moobs, btn = document.getElementById('buyMoobs'), st = document.getElementById('upState'), card = document.getElementById('upMoobs');
+    card.classList.toggle('owned', u.owned);
+    if (u.owned) { btn.hidden = true; st.textContent = 'Comprada: los moobs ya están apareciendo.'; }
+    else {
+      btn.hidden = false;
+      const falta = u.cost - wallet.moneda;
+      btn.disabled = falta > 0;
+      st.textContent = falta > 0 ? `Te faltan ${falta} ${falta === 1 ? 'moneda' : 'monedas'}.` : '¡Ya te alcanza!';
+    }
+    document.getElementById('devUnlock').hidden = u.owned;
+    document.getElementById('devLock').hidden = !u.owned;
+  }
+
+  const cfg = { pattern: 'grupos', delay: 1, guides: true };
+  let items = [], group = null, waitT = .6, altHigh = false, clock = 0, fx = [];
+  const wallet = { moob: 0, moneda: 0 };
+  const stats = { got: 0, miss: 0, n: 0, log: [] };
+
+  function spawnGroup() {
+    const g0 = PATTERNS[cfg.pattern]();
+    stats.n++;
+    group = { n: stats.n, ...g0, got: 0, miss: 0, air: 0, done: false };
+    const start = scroll + W + 8 + g0.gap;
+    items = Array.from({ length: g0.count }, (_, i) => ({ wx: start + i * SPACING, alive: true, ph: i * .7 }));
+    stats.log.unshift(group);
+    stats.log.length = Math.min(stats.log.length, 6);
+    renderStats();
+  }
+  function itemY(it) { return GROUND - HEIGHTS[group.hk] + Math.sin(clock * 4 + it.ph) * 1.5; }
+  function resolve(it, result, sx, cy) {
+    it.alive = false;
+    if (result === 'miss') { group.miss++; stats.miss++; }
+    else {
+      group.got++; stats.got++; wallet[group.type]++;
+      if (result === 'atk') group.air++;
+      const T = ITEM[group.type];
+      for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; fx.push({ x: sx, y: cy, vx: Math.cos(a) * 40, vy: Math.sin(a) * 40, life: .4, kind: 'spark', col: T.spark }); }
+      fx.push({ x: sx, y: cy - 6, vx: 0, vy: -22, life: .7, kind: 'text', col: T.text });
+    }
+    if (items.every(i => !i.alive)) { group.done = true; items = []; waitT = cfg.delay; }
+    renderStats();
+  }
+  function updateMoob(dt) {
+    if (!items.length) { waitT -= dt; if (waitT <= 0) spawnGroup(); return; }
+    const top = GROUND - 22 + hero.y, bot = GROUND + hero.y;
+    let slash = null;
+    if (hero.aerial && hero.atkT >= 0) {
+      const af = Math.floor(hero.atkT * ANIMS.attack.fps);
+      if (af === 2 || af === 3) slash = { x: HERO_X - 1, y: GROUND - 11 + hero.y };
+    }
+    for (const it of items) {
+      if (!it.alive) continue;
+      const sx = it.wx - scroll, cy = itemY(it);
+      if (Math.abs(sx - HERO_X) < 9 && cy > top - 5 && cy < bot) { resolve(it, 'ok', sx, cy); continue; }
+      if (slash) {
+        const dx = sx - slash.x, dy = cy - slash.y, dist = Math.hypot(dx, dy), ang = Math.atan2(dy, dx);
+        if (dist > 4 && dist < 22 && ang > -1.7 && ang < 0.8) { resolve(it, 'atk', sx, cy); continue; }
+      }
+      if (sx < -12) resolve(it, 'miss', sx, cy);
+      if (!items.length) break;
+    }
+  }
+  function drawMoob() {
+    if (cfg.guides) {
+      for (const k in HEIGHTS) {
+        g.fillStyle = HCOL[k]; g.globalAlpha = .35;
+        const y = GROUND - HEIGHTS[k];
+        for (let x = (-(scroll | 0) % 6 + 6) % 6; x < W; x += 6) g.fillRect(x, y, 3, 1);
+      }
+      g.globalAlpha = 1;
+    }
+    if (!items.length) return;
+    const T = ITEM[group.type];
+    let arrow = false;
+    for (const it of items) {
+      if (!it.alive) continue;
+      const sx = it.wx - scroll, cy = itemY(it);
+      if (sx > W + 7) { arrow = true; continue; }
+      g.fillStyle = T.glow; g.beginPath(); g.arc(sx, cy, group.type === 'moob' ? 9 : 7, 0, Math.PI * 2); g.fill();
+      g.drawImage(T.frames[Math.floor(clock * 8 + it.ph * 2) % 4], Math.round(sx - 7), Math.round(cy - 7));
+    }
+    if (arrow && cfg.guides) {
+      const y = Math.round(GROUND - HEIGHTS[group.hk]);
+      g.fillStyle = HCOL[group.hk];
+      for (let i = 0; i < 4; i++) g.fillRect(W - 3 - i, y - i, 1, i * 2 + 1);
+    }
+  }
+  function drawFx(dt) {
+    fx = fx.filter(p => (p.life -= dt) > 0);
+    for (const p of fx) {
+      p.x += p.vx * dt; p.y += p.vy * dt;
+      if (p.kind === 'spark') { p.vx *= .9; p.vy *= .9; g.fillStyle = `rgba(${p.col},${Math.min(1, p.life * 3)})`; g.fillRect(p.x | 0, p.y | 0, 2, 2); }
+      else { g.globalAlpha = Math.min(1, p.life * 2); g.font = '700 10px "Pixelify Sans", monospace'; g.textAlign = 'center'; g.fillStyle = '#1a1423'; g.fillText('+1', (p.x | 0) + 1, (p.y | 0) + 1); g.fillStyle = p.col; g.fillText('+1', p.x | 0, p.y | 0); g.globalAlpha = 1; g.textAlign = 'start'; }
+    }
+  }
+  function renderStats() {
+    const set = (id, v) => { document.getElementById(id).textContent = v; };
+    const mo = UPGRADES.moobs.owned;
+    set('hudMoobs', mo ? wallet.moob : '🔒'); set('hudCoins', wallet.moneda);
+    document.getElementById('hudMoobsWrap').hidden = !mo;
+    set('statMoobs', mo ? wallet.moob : 'Bloqueado');
+    renderUpgrade(); set('statCoins', wallet.moneda);
+    set('sGot', stats.got); set('sMiss', stats.miss);
+    const tot = stats.got + stats.miss;
+    set('sRate', tot ? Math.round(stats.got / tot * 100) + '%' : '–');
+    const log = document.getElementById('log');
+    log.innerHTML = stats.log.length ? stats.log.map(e => {
+      const T = ITEM[e.type];
+      let res, cls;
+      if (!e.done) { res = 'En camino'; cls = 'wait'; }
+      else { res = `${e.got}/${e.count}` + (e.air ? ` · ${e.air} aéreo` : ''); cls = e.got === e.count ? 'ok' : e.got ? 'part' : 'miss'; }
+      return `<li><span class="n">#${e.n}</span><span class="pill ${e.hk}">${e.hk}</span><span class="what"><i class="dot ${e.type}"></i>${e.count} ${e.count > 1 ? T.plural : T.name}</span><span class="res ${cls}">${res}</span></li>`;
+    }).join('') : '<li class="empty" style="display:block">Aún no aparece ningún grupo.</li>';
+  }
+  function renderNext() {
+    const el = document.getElementById('sNext');
+    if (!items.length) { el.textContent = Math.max(0, waitT).toFixed(1) + ' s'; return; }
+    const first = items.find(i => i.alive);
+    const d = first ? Math.round(first.wx - scroll - HERO_X) : 0;
+    el.textContent = d > 0 ? d + ' px' : 'aquí';
+  }
+
+  let last = performance.now(), prevRunFrame = -1, uiTick = 0;
+  function loop(now) {
+    const dt = Math.max(0, Math.min(.05, (now - last) / 1000)); last = now;
+    const speed = hero.running ? 90 : 0;
+    scroll += speed * dt;
+    clock += dt;
+
+    // physics
+    if (hero.air) {
+      hero.vy += 620 * dt; hero.y += hero.vy * dt;
+      if (hero.y >= 0) { hero.y = 0; hero.vy = 0; hero.air = false; for (let i = 0; i < 4; i++) dust.push({ x: HERO_X + (i - 1.5) * 3, y: GROUND, vx: (i - 1.5) * 18, vy: -14, life: .4 }); }
+    }
+    hero.animT += dt;
+    if (hero.pendingAerial && hero.air && hero.vy > -70) { hero.pendingAerial = false; hero.atkT = 0; hero.aerial = true; }
+    if (!hero.air) hero.pendingAerial = false;
+    updateMoob(dt);
+
+    // choose sprite
+    let state, f, legPose = null;
+    if (hero.atkT >= 0) {
+      hero.atkT += dt;
+      f = Math.floor(hero.atkT * ANIMS.attack.fps);
+      if (f >= ANIMS.attack.frames.length) { hero.atkT = -1; hero.aerial = false; }
+    }
+    const base = hero.air ? 'jump' : (hero.running ? 'run' : 'idle');
+    let baseF;
+    if (base === 'jump') baseF = hero.vy < 0 ? 0 : 1;
+    else { const A = ANIMS[base]; baseF = Math.floor(hero.animT * A.fps) % A.frames.length; }
+
+    if (hero.atkT >= 0) { state = 'attack'; legPose = ANIMS[base].frames[baseF]; }
+    else { state = base; f = baseF; }
+
+    // footstep dust
+    if (base === 'run' && (baseF === 0 || baseF === 3) && baseF !== prevRunFrame) dust.push({ x: HERO_X - 2, y: GROUND - 1, vx: -40, vy: -8, life: .35 });
+    prevRunFrame = base === 'run' ? baseF : -1;
+
+    // draw
+    drawSky();
+    drawRidge(.08, 74, 11, '#4a2f5c', 1);
+    drawRidge(.2, 88, 8, '#3a2550', 4);
+    drawTrees(.45, '#2a1c3c', .75, 11);
+    drawTrees(.7, '#1f1530', .95, 23);
+    drawGround();
+    drawMoob();
+
+    // shadow
+    const sh = Math.max(4, 10 - Math.abs(hero.y) / 6);
+    g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(HERO_X - sh, GROUND, sh * 2, 2);
+
+    const spr = drawSprite(state, f, legPose);
+    g.drawImage(spr, HERO_X - 18, Math.round(GROUND - 38 + hero.y));
+
+    // dust
+    dust = dust.filter(d => (d.life -= dt) > 0);
+    for (const d of dust) { d.x += (d.vx - speed * .3) * dt; d.y += d.vy * dt; d.vy += 30 * dt; g.fillStyle = `rgba(239,233,255,${Math.min(1, d.life * 2) * .6})`; g.fillRect(d.x | 0, d.y | 0, 2, 2); }
+
+    drawFx(dt);
+    if ((uiTick += dt) > .1) { uiTick = 0; renderNext(); }
+
+    hudState.textContent = state === 'attack' ? 'Atacando' : base === 'jump' ? 'Saltando' : base === 'run' ? 'Corriendo' : 'Quieto';
+    requestAnimationFrame(loop);
+  }
+
+  // ---------- sprite sheet ----------
+  const sheet = document.getElementById('sheet');
+  function drawSheet() {
+    const rows = ['run', 'idle', 'jump', 'attack'];
+    const names = { run: 'Correr', idle: 'Quieto', jump: 'Saltar', attack: 'Atacar' };
+    const sc = 3, labelW = 90, cell = S * sc;
+    const maxF = Math.max(...rows.map(r => ANIMS[r].frames.length));
+    sheet.width = labelW + maxF * cell; sheet.height = rows.length * cell;
+    const s = sheet.getContext('2d');
+    s.imageSmoothingEnabled = false;
+    s.fillStyle = '#15111f'; s.fillRect(0, 0, sheet.width, sheet.height);
+    rows.forEach((r, ri) => {
+      s.fillStyle = '#efe9ff'; s.font = '700 18px "Pixelify Sans", monospace'; s.textBaseline = 'middle';
+      s.fillText(names[r], 10, ri * cell + cell / 2);
+      ANIMS[r].frames.forEach((_, fi) => {
+        const x = labelW + fi * cell, y = ri * cell;
+        s.fillStyle = (fi + ri) % 2 ? '#1c1729' : '#211a31'; s.fillRect(x, y, cell, cell);
+        s.drawImage(drawSprite(r, fi), x, y, cell, cell);
+      });
+    });
+  }
+
+  // ---------- UI ----------
+  const btnRun = document.getElementById('btnRun');
+  const hudState = document.getElementById('hudState');
+  const hudName = document.getElementById('hudName');
+  const nameInput = document.getElementById('heroName');
+
+  function save() { try { localStorage.setItem('moobs-hero', JSON.stringify({ colors, name: heroName })); } catch (e) {} }
+  function syncInputs() { for (const k in ids) document.getElementById(ids[k]).value = colors[k]; nameInput.value = heroName; hudName.textContent = heroName || 'Slayer'; }
+  function refresh() { buildPalette(); drawSheet(); save(); }
+
+  for (const k in ids) document.getElementById(ids[k]).addEventListener('input', e => { colors[k] = e.target.value; refresh(); });
+  document.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('click', () => { colors = { ...PRESETS[+b.dataset.preset] }; syncInputs(); refresh(); }));
+  nameInput.addEventListener('input', () => { heroName = nameInput.value.trim(); hudName.textContent = heroName || 'Slayer'; save(); });
+
+  document.getElementById('btnJump').addEventListener('click', jump);
+  document.getElementById('btnAttack').addEventListener('click', attack);
+  document.getElementById('btnAerial').addEventListener('click', aerialAttack);
+  btnRun.addEventListener('click', toggleRun);
+  game.addEventListener('pointerdown', attack);
+  window.addEventListener('keydown', e => {
+    if (e.target === nameInput) return;
+    if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') { e.preventDefault(); jump(); }
+    else if (e.code === 'KeyJ' || e.code === 'KeyX') attack();
+    else if (e.code === 'KeyK') aerialAttack();
+    else if (e.code === 'KeyP') toggleRun();
+  });
+
+  const patternSel = document.getElementById('pattern'), delayIn = document.getElementById('delay'), guidesIn = document.getElementById('guides');
+  patternSel.addEventListener('change', () => { cfg.pattern = patternSel.value; altHigh = false; });
+  delayIn.addEventListener('input', () => { cfg.delay = +delayIn.value; document.getElementById('delayOut').textContent = cfg.delay.toFixed(1) + ' s'; });
+  guidesIn.addEventListener('change', () => { cfg.guides = guidesIn.checked; });
+  document.getElementById('resetStats').addEventListener('click', () => { stats.got = stats.miss = 0; stats.log = group && !group.done ? [group] : []; renderStats(); });
+  cfg.pattern = patternSel.value; cfg.delay = +delayIn.value; cfg.guides = guidesIn.checked;
+  document.getElementById('delayOut').textContent = cfg.delay.toFixed(1) + ' s';
+
+  document.getElementById('buyMoobs').addEventListener('click', () => buyMoobs(false));
+  document.getElementById('devUnlock').addEventListener('click', () => buyMoobs(true));
+  document.getElementById('devLock').addEventListener('click', lockMoobs);
+  document.getElementById('devCoins').addEventListener('click', () => { wallet.moneda += 10; renderStats(); });
+  document.getElementById('upIcon').getContext('2d').drawImage(moobFrames[0], 0, 0);
+  renderStats();
+
+  syncInputs();
+  buildPalette();
+  drawSheet();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawSheet);
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
