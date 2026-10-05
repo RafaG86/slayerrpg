@@ -91,6 +91,10 @@ button.tab[aria-selected="true"] { background: var(--panel); color: var(--ink); 
 .savebox p { margin: 0; color: var(--dim); font-size: 13px; }
 .savebox .save-state { color: var(--ink); }
 .savebox button { justify-self: start; font-size: 14px; }
+.bonusbar { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; font-family: var(--f-display); font-size: clamp(11px, 2.2vw, 15px); background: rgba(21, 17, 31, .85); border: 1px solid #b48cff; border-radius: 4px; padding: 3px 10px; color: var(--ink); pointer-events: none; white-space: nowrap; }
+.bonusbar b { color: #d9c6ff; }
+.bonusbar > i { display: block; width: 80px; height: 6px; background: var(--panel); border-radius: 3px; overflow: hidden; }
+.bonusbar > i > i { display: block; height: 100%; width: 0; background: var(--mint); }
 .buffs { position: absolute; left: 10px; top: 32px; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none; max-width: 60%; }
 .buffs span { font-family: var(--f-display); font-size: clamp(10px, 2vw, 13px); background: rgba(21, 17, 31, .85); color: var(--ember); border: 1px solid var(--ember); border-radius: 3px; padding: 1px 6px; }
 .buffs span.boost { color: var(--mint); border-color: var(--mint); }
@@ -201,6 +205,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     <div class="hud"><span id="hudName">Slayer</span> · Monedas <b id="hudCoins">0</b> (<b id="hudCps">0</b>/s) <span id="hudMoobsWrap" hidden>· Moobs <b id="hudMoobs">0</b></span> · Estado: <b id="hudState">Corriendo</b></div>
     <div class="toast" id="toast" hidden></div>
     <div class="buffs" id="buffs" aria-live="polite"></div>
+    <div class="bonusbar" id="bonusBar" hidden><b>Etapa bonus</b> · <span id="bonusSec">Sección 1/4</span><i><i id="bonusFill"></i></i></div>
     <button type="button" class="shop-btn" id="shopBtn" aria-expanded="false" aria-controls="shop">
       <canvas id="shopIcon" width="12" height="12" aria-hidden="true"></canvas><span>Tienda</span>
       <i class="badge" id="shopBadge" hidden title="Hay algo que puedes comprar"></i>
@@ -410,6 +415,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
         <button type="button" class="devbtn" id="devPS">+5 PS</button>
         <button type="button" class="devbtn" id="devBox">Caja ahora</button>
         <button type="button" class="devbtn" id="devGiant">Gigante ahora</button>
+        <button type="button" class="devbtn" id="devBonus">Etapa bonus ahora</button>
         <button type="button" class="devbtn" id="devUnlock">Desbloquear gratis</button>
         <button type="button" class="devbtn" id="devLock" hidden>Bloquear de nuevo</button>
       </div>
@@ -939,6 +945,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     EQUIP.forEach(e => { e.lv = 0; }); eqUps.clear();
     UPGRADES.moobs.owned = has('cazador');
     items = []; group = null; waitT = .6; altHigh = false;
+    if (bonus.on) { bonus.on = false; document.getElementById('bonusBar').hidden = true; hero.y = 0; hero.vy = 0; hero.air = false; }
   }
   function ascend() {
     const p = pendingPS();
@@ -986,7 +993,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   }
 
   // ---------- estadísticas de por vida ----------
-  const freshLife = () => ({ boosts: 0, boxes: 0, giants: 0, passive: 0, coins: 0, moobs: 0, jumps: 0, attacks: 0, perfect: 0, groups: 0, streak: 0, bestStreak: 0, equipBought: 0, moobsUnlocked: 0, spent: 0, dist: 0, time: 0 });
+  const freshLife = () => ({ bonusRuns: 0, bonusClears: 0, boosts: 0, boxes: 0, giants: 0, passive: 0, coins: 0, moobs: 0, jumps: 0, attacks: 0, perfect: 0, groups: 0, streak: 0, bestStreak: 0, equipBought: 0, moobsUnlocked: 0, spent: 0, dist: 0, time: 0 });
   let life = freshLife();
 
   let items = [], group = null, waitT = .6, altHigh = false, clock = 0, fx = [];
@@ -1022,6 +1029,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     { id: 'soul',  w: 2, moobs: true, text: 'Almas ×5 por 20 s', run: () => addBuff('soul', 'soul', 5, 20, 'Almas ×5') },
     { id: 'horde', w: 2, moobs: true, text: '¡Horda de moobs!', run: () => { hordeLeft = 2; } },
     { id: 'boost', w: 1, text: 'Boost gratis', run: () => { boost.cd = 0; startBoost(true); } },
+    { id: 'bonus', w: 1, text: 'Etapa bonus', run: () => { setTimeout(startBonus, 0); } },
   ];
   function openBox() {
     const pool = BOX_EVENTS.filter(e => !e.moobs || UPGRADES.moobs.owned);
@@ -1101,6 +1109,8 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     { id: 'g25',    name: 'Leyenda',            text: 'Derrota 25 moobs gigantes',   prog: () => life.giants,   goal: 25 },
     { id: 'a1',     name: 'Renacer',            text: 'Asciende por primera vez',    prog: () => asc.count,     goal: 1 },
     { id: 'u1',     name: 'Más allá',           text: 'Haz una ultra ascensión',     prog: () => asc.ultras,    goal: 1 },
+    { id: 'bn1',    name: 'Otra dimensión',     text: 'Entra a una etapa bonus',     prog: () => life.bonusRuns, goal: 1 },
+    { id: 'bnc',    name: 'Sin caerse',         text: 'Completa una etapa bonus',    prog: () => life.bonusClears, goal: 1 },
   ];
   const achieved = new Set();
   const achMult = () => 1 + .01 * achieved.size;
@@ -1112,6 +1122,131 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
 
   // gigantes: moob grande en el piso con 4 de vida; lo dañan el toque y el ataque
   const GIANT = { hp: 4, reward: 25, chance: .12 };
+
+  // ---------- etapa bonus ----------
+  // Un nivel aparte con plataformas y huecos: el héroe sigue corriendo solo y el jugador salta.
+  // 4 secciones; caerse termina la etapa (se conserva lo recogido); completarla da +50% de las monedas y una caja plateada.
+  const bonus = { on: false, segs: [], items: [], secEnds: [], end: 0, start: 0, coins: 0, moobs: 0 };
+  const orb = { on: false, wx: 0, timer: 90 };
+  const bonusUnlocked = () => life.spent >= 500 || asc.count > 0;
+  const groundAt = wx => !bonus.on || bonus.segs.some(s => wx >= s.a && wx <= s.b);
+  function genBonus() {
+    const segs = [], its = [], secEnds = [];
+    let cur = scroll + HERO_X + 150;
+    segs.push({ a: scroll - 60, b: cur });
+    for (let s = 0; s < 4; s++) {
+      for (let k = 0; k < 4; k++) {
+        const gap = 22 + s * 4 + Math.random() * 8;
+        // arco de monedas que sigue la trayectoria del salto sobre el hueco
+        for (let t = .1; t <= .61; t += .1) its.push({ wx: cur - 8 + 90 * t, y: GROUND - 11 + (-215 * t + 310 * t * t), type: 'moneda', alive: true });
+        const a = cur + gap, len = 70 + Math.random() * 70;
+        segs.push({ a, b: a + len });
+        if (Math.random() < .5 && UPGRADES.moobs.owned) its.push({ wx: a + len * .55, y: GROUND - 9, type: 'moob', alive: true });
+        else for (let i = 0; i < 3; i++) its.push({ wx: a + len * .35 + i * 12, y: GROUND - 9, type: 'moneda', alive: true });
+        cur = a + len;
+      }
+      secEnds.push(cur);
+    }
+    segs[segs.length - 1].b = cur + 260;
+    Object.assign(bonus, { segs, items: its, secEnds, end: cur + 120, start: scroll, coins: 0, moobs: 0 });
+  }
+  function startBonus() {
+    if (bonus.on) return;
+    items = []; group = null; box.on = false; orb.on = false;
+    bonus.on = true; genBonus(); life.bonusRuns++;
+    document.getElementById('bonusBar').hidden = false;
+    toast('¡Etapa bonus! Salta los huecos');
+  }
+  function endBonus(cleared) {
+    bonus.on = false; orb.timer = 120 + Math.random() * 180; waitT = 1;
+    hero.y = 0; hero.vy = 0; hero.air = false;
+    document.getElementById('bonusBar').hidden = true;
+    if (cleared) {
+      const extra = bonus.coins * .5;
+      wallet.moneda += extra; silverBoxes++; life.bonusClears++;
+      toast(`¡Etapa bonus completa! +${fmt(extra)} monedas extra y una caja plateada`);
+    } else toast(`Te caíste. Etapa bonus terminada: ${fmt(bonus.coins)} monedas y ${nf(bonus.moobs)} moobs`);
+    renderStats(); saveGame();
+  }
+  function bonusCollect(it, sx) {
+    it.alive = false;
+    let amt;
+    if (it.type === 'moneda') {
+      amt = (1 + 2 * totalCps()) * buffMult('coin') * (1 + actBonus());
+      wallet.moneda += amt; life.coins += amt; bonus.coins += amt;
+    } else {
+      amt = (has('almas') && Math.random() < .25 ? 2 : 1) * buffMult('soul') * (1 + actBonus());
+      wallet.moob += amt; life.moobs += amt; bonus.moobs += amt;
+    }
+    const T = ITEM[it.type];
+    for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; fx.push({ x: sx, y: it.y, vx: Math.cos(a) * 35, vy: Math.sin(a) * 35, life: .35, kind: 'spark', col: T.spark }); }
+    fx.push({ x: sx, y: it.y - 6, vx: 0, vy: -22, life: .6, kind: 'text', col: T.text, val: '+' + fmtCps(amt) });
+  }
+  function updateBonus() {
+    const top = GROUND - 22 + hero.y, bot = GROUND + hero.y;
+    let slash = null;
+    if (hero.atkT >= 0) { const af = Math.floor(hero.atkT * ANIMS.attack.fps); if (af === 2 || af === 3) slash = { x: HERO_X - 1, y: GROUND - 11 + hero.y }; }
+    for (const it of bonus.items) {
+      if (!it.alive) continue;
+      const sx = it.wx - scroll;
+      if (sx < -12 || sx > W + 12) continue;
+      if (Math.abs(sx - HERO_X) < 9 && it.y > top - 5 && it.y < bot) { bonusCollect(it, sx); continue; }
+      if (slash && it.type === 'moob') { const d = Math.hypot(sx - slash.x, it.y - slash.y); if (d < 22) bonusCollect(it, sx); }
+    }
+    if (hero.y > 40) endBonus(false);
+    else if (scroll + HERO_X >= bonus.end) endBonus(true);
+    // progreso
+    const total = bonus.end - bonus.start, done = Math.min(1, (scroll - bonus.start) / total);
+    const sec = Math.min(4, bonus.secEnds.filter(e => scroll + HERO_X > e).length + 1);
+    document.getElementById('bonusSec').textContent = `Sección ${sec}/4`;
+    document.getElementById('bonusFill').style.width = (done * 100) + '%';
+  }
+  function updateOrb(dt) {
+    if (!bonusUnlocked()) return;
+    if (!orb.on) { orb.timer -= dt; if (orb.timer <= 0) { orb.on = true; orb.wx = scroll + W + 20; } return; }
+    const sx = orb.wx - scroll, cy = GROUND - 30, top = GROUND - 22 + hero.y, bot = GROUND + hero.y;
+    if (Math.abs(sx - HERO_X) < 10 && cy > top - 6 && cy < bot) startBonus();
+    else if (sx < -14) { orb.on = false; orb.timer = 120 + Math.random() * 180; }
+  }
+  function drawOrb() {
+    if (!orb.on) return;
+    const sx = orb.wx - scroll, cy = GROUND - 30 + Math.sin(clock * 3) * 2;
+    if (sx > W + 8) { if (cfg.guides) { g.fillStyle = '#6fe3c1'; for (let i = 0; i < 4; i++) g.fillRect(W - 3 - i, Math.round(cy) - i, 1, i * 2 + 1); } return; }
+    g.fillStyle = 'rgba(111,227,193,.2)'; g.beginPath(); g.arc(sx, cy, 11, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#b48cff'; g.beginPath(); g.arc(sx, cy, 6, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#efe9ff';
+    for (let i = 0; i < 6; i++) { const a = clock * 4 + i / 6 * Math.PI * 2; g.fillRect(Math.round(sx + Math.cos(a) * 8), Math.round(cy + Math.sin(a) * 8), 1, 1); }
+    g.fillStyle = '#6fe3c1'; g.fillRect(Math.round(sx) - 1, Math.round(cy) - 1, 2, 2);
+  }
+  function drawBonusWorld() {
+    g.fillStyle = 'rgba(70,20,110,.35)'; g.fillRect(0, 0, W, GROUND);
+    g.fillStyle = '#0d0915'; g.fillRect(0, GROUND, W, H - GROUND);
+    for (const s of bonus.segs) {
+      const x0 = s.a - scroll, x1 = s.b - scroll;
+      if (x1 < -16 || x0 > W + 16) continue;
+      g.save(); g.beginPath(); g.rect(x0, GROUND - 3, x1 - x0, H); g.clip(); drawGround(); g.restore();
+      g.fillStyle = '#1a1423'; g.fillRect(Math.round(x0) - 1, GROUND, 1, H - GROUND); g.fillRect(Math.round(x1), GROUND, 1, H - GROUND);
+    }
+    // meta
+    const fx0 = bonus.end - scroll;
+    if (fx0 > -10 && fx0 < W + 10) {
+      g.fillStyle = '#efe9ff'; g.fillRect(Math.round(fx0), GROUND - 34, 2, 34);
+      for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) { g.fillStyle = (i + j) % 2 ? '#1a1423' : '#efe9ff'; g.fillRect(Math.round(fx0) + 2 + i * 3, GROUND - 34 + j * 3, 3, 3); }
+    }
+    for (const it of bonus.items) {
+      if (!it.alive) continue;
+      const sx = it.wx - scroll;
+      if (sx < -10 || sx > W + 10) continue;
+      const fr = (it.type === 'moob' ? moobFrames : coinFrames)[Math.floor(clock * 8 + it.wx) % 4];
+      g.drawImage(fr, Math.round(sx - 7), Math.round(it.y - 7));
+    }
+  }
+  function autoBonus() {
+    if (!dev.autoCol && !dev.autoAtk) return;
+    if (dev.autoAtk && hero.atkT < 0 && bonus.items.some(it => it.alive && it.type === 'moob' && it.wx - scroll - HERO_X > 0 && it.wx - scroll - HERO_X < 20)) attack();
+    if (!hero.air && groundAt(scroll + HERO_X) && !groundAt(scroll + HERO_X + 5)) jump();
+  }
+
 
   function spawnGroup() {
     let g0 = PATTERNS[cfg.pattern]();
@@ -1469,7 +1604,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
       ['Ascensiones', nf(asc.count)], ['Puntos Slayer ganados', nf(asc.psTotal)],
       ['Ultra ascensiones', nf(asc.ultras)], ['PUS ganados', nf(asc.uspTotal)],
       ['Boosts usados', nf(life.boosts)], ['Cajas abiertas', nf(life.boxes)],
-      ['Gigantes derrotados', nf(life.giants)], ['Logros', `${achieved.size} / ${ACH.length}`],
+      ['Gigantes derrotados', nf(life.giants)], ['Etapas bonus', `${nf(life.bonusClears)} completas de ${nf(life.bonusRuns)}`], ['Logros', `${achieved.size} / ${ACH.length}`],
       ['Monedas por segundo', fmtCps(totalCps())], ['Monedas pasivas', fmt(life.passive)],
       ['Monedas gastadas', fmt(life.spent)], ['Piezas compradas', nf(life.equipBought)],
     ];
@@ -1500,14 +1635,14 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     // physics
     if (hero.air) {
       hero.vy += 620 * dt; hero.y += hero.vy * dt;
-      if (hero.y >= 0) { hero.y = 0; hero.vy = 0; hero.air = false; for (let i = 0; i < 4; i++) dust.push({ x: HERO_X + (i - 1.5) * 3, y: GROUND, vx: (i - 1.5) * 18, vy: -14, life: .4 }); }
+      if (hero.y >= 0 && hero.y < 8 && groundAt(scroll + HERO_X)) { hero.y = 0; hero.vy = 0; hero.air = false; for (let i = 0; i < 4; i++) dust.push({ x: HERO_X + (i - 1.5) * 3, y: GROUND, vx: (i - 1.5) * 18, vy: -14, life: .4 }); }
     }
+    if (bonus.on && !hero.air && !groundAt(scroll + HERO_X)) { hero.air = true; hero.vy = 0; }
     hero.animT += dt;
     if (hero.pendingAerial && hero.air && hero.vy > -70) { hero.pendingAerial = false; hero.atkT = 0; hero.aerial = true; }
     if (!hero.air) hero.pendingAerial = false;
-    autoPlay();
-    updateMoob(dt);
-    updateBox(dt);
+    if (bonus.on) { autoBonus(); updateBonus(); }
+    else { autoPlay(); updateMoob(dt); updateBox(dt); updateOrb(dt); }
 
     // choose sprite
     let state, f, legPose = null;
@@ -1532,16 +1667,20 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     drawSky();
     drawRidge(.08, 74, 11, '#4a2f5c', 1);
     drawRidge(.2, 88, 8, '#3a2550', 4);
-    drawTrees(.45, '#2a1c3c', .75, 11);
-    drawTrees(.7, '#1f1530', .95, 23);
-    drawGround();
-    drawSpeedLines();
-    drawMoob();
-    drawBox();
+    if (bonus.on) { drawBonusWorld(); drawSpeedLines(); }
+    else {
+      drawTrees(.45, '#2a1c3c', .75, 11);
+      drawTrees(.7, '#1f1530', .95, 23);
+      drawGround();
+      drawSpeedLines();
+      drawMoob();
+      drawBox();
+      drawOrb();
+    }
 
     // shadow
     const sh = Math.max(4, 10 - Math.abs(hero.y) / 6);
-    g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(HERO_X - sh, GROUND, sh * 2, 2);
+    if (groundAt(scroll + HERO_X) && hero.y <= 0) { g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(HERO_X - sh, GROUND, sh * 2, 2); }
 
     const spr = drawSprite(state, f, legPose);
     g.drawImage(spr, HERO_X - 18, Math.round(GROUND - 38 + hero.y));
@@ -1700,6 +1839,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     EQUIP.forEach(e => { e.lv = 0; }); eqUps.clear();
     UPGRADES.moobs.owned = false; claimed.clear();
     Object.assign(asc, { psAvail: 0, psTotal: 0, count: 0, usp: 0, uspTotal: 0, ultras: 0, stones: { act: 0, idle: 0 } }); asc.nodes.clear();
+    if (bonus.on) { bonus.on = false; document.getElementById('bonusBar').hidden = true; hero.y = 0; hero.air = false; } orb.on = false; orb.timer = 90;
     life = freshLife(); achieved.clear(); silverBoxes = 0; buffs = []; boost.t = boost.cd = 0; hordeLeft = 0; box.on = false; box.timer = 20;
     stats.got = stats.miss = stats.n = 0; stats.lifeMiss = 0; stats.log = [];
     items = []; group = null; waitT = .6; altHigh = false;
@@ -1736,6 +1876,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
       .forEach((r, y) => [...r].forEach((ch, x) => { if (col[ch]) { c.fillStyle = col[ch]; c.fillRect(x, y, 1, 1); } }));
   }
   document.getElementById('devSouls').addEventListener('click', () => { wallet.moob += 20; life.moobs += 20; renderStats(); });
+  document.getElementById('devBonus').addEventListener('click', () => startBonus());
   document.getElementById('devBox').addEventListener('click', () => { life.spent = Math.max(life.spent, 100); box.on = true; box.wx = scroll + W + 20; box.silver = false; });
   document.getElementById('devGiant').addEventListener('click', () => { if (!UPGRADES.moobs.owned) buyMoobs(true); items = []; group = null; waitT = 99; const old = cfg.pattern; spawnGiant(); });
   document.getElementById('devPS').addEventListener('click', () => { asc.psAvail += 5; asc.psTotal += 5; renderStats(); });

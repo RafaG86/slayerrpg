@@ -36,6 +36,7 @@ Abre `moobs-slayer/index.html` en el navegador para jugar. No necesita instalaci
 - Boost (botón o B): 75 monedas, velocidad ×3.5 durante 10 s y 30 s de espera.
 - Cajas aleatorias (desde 100 monedas gastadas): aparecen cada 30–120 s en altura y se abren saltando. Eventos: producción ×20, monedas ×10, lluvia de monedas, almas ×5, horda de moobs y boost gratis. Los efectos se acumulan; 1 de cada 10 cajas es plateada y se guarda para abrirla después.
 - Moobs gigantes: 12% de los grupos; 4 de vida, se dañan con el toque y el ataque, frenan al héroe mientras pelea y dan 25 moobs.
-- 16 logros (pestaña Estadísticas): cada uno da +1% de monedas por segundo.
+- Etapa bonus: se entra tocando un portal (aparece cada 2–5 min tras gastar 500 monedas o ascender) o por una caja aleatoria. Nivel de 4 secciones con plataformas y huecos; arcos de monedas sobre cada hueco (cada moneda vale 1 + 2 s de producción) y moobs en las plataformas. Caerse termina la etapa (se conserva lo recogido); completarla da +50% de las monedas recogidas y una caja plateada.
+- 18 logros (pestaña Estadísticas): cada uno da +1% de monedas por segundo.
 - Guardado automático en el navegador (localStorage, clave `moobs-slayer-save-v1`): monedas, moobs, equipo, mejoras, misiones, estadísticas y configuración. Se guarda cada 5 s, al comprar o reclamar y al cerrar la página; se carga sola al abrir el juego.
 - Panel de patrones de aparición para estudiar y mejorar el respawn.
