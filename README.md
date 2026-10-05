@@ -2,7 +2,7 @@
 
 ## Moobs Slayer
 
-Estilo visual cartoon suave: todo se dibuja en vectorial a la resolución real de la pantalla (canvas escalado con devicePixelRatio), con degradados, contornos redondeados, halos y nubes. Fuente de la interfaz: Fredoka.
+Vista alejada (0,5×) y escenario a todo el ancho del navegador; el ancho del mundo se adapta a la pantalla. Estilo visual cartoon suave: todo se dibuja en vectorial a la resolución real de la pantalla (canvas escalado con devicePixelRatio), con degradados, contornos redondeados, halos y nubes. Fuente de la interfaz: Fredoka.
 
 Juego de plataformas 2D estilo Idle Slayer. El héroe corre solo por el escenario y el jugador salta para recoger monedas. Los moobs se desbloquean como mejora.
 
@@ -47,6 +47,10 @@ Abre `moobs-slayer/index.html` en el navegador para jugar. No necesita instalaci
   - Valor de moneda: Recompensa al esfuerzo (200), Monedero grande, Cofre sin fondo y Hongos extravagantes (2e33): cada moneda recogida vale un % de tu producción.
   - Logros: Cinturón del conocimiento (2.500), de la sabiduría y del poder (2,5e68): % extra por logro.
   - Almas, arco (Estabilidad, Disparo triple, Carcaj rápido), cajas (imán vertical, más frecuentes, efectos más largos), enemigos (más moobs, más gigantes, evolución gigante), imán de monedas I/II/guantes, boost económico, Mega boost y Colgante hechicero (+30% sin conexión).
+- Enemigos por dimensión (especies con dibujo propio): Colinas (gusano, avispa), Bosque (hongo, murciélago), Fábrica (barril de almas, gas venenoso), Jungla (planta carnívora, avispa), Desierto (cobra, águila), Espacio (estrella, nube). Gigante propio por dimensión con corona (Gigante de las colinas, Rey hongo, Tanque de almas, Gorila gigante, Guerrero Anubis, Subwoofer funky).
+- Evoluciones (mejoras por especie, se desbloquean al derrotar 10): cada nivel agranda al enemigo, le agrega aura/cuernos/corona y da ×1,5 almas. Gusano 4 niveles, avispa 3, hongo/barril/planta 2, resto 1.
+- Mejoras de enemigos: Cebo para moobs, Invasión enemiga (+10% grupos de moobs), Multa Hostibus (+1 por grupo), Sed de batalla (los moobs sueltan monedas), Tambor de gigantes y Evolución gigante.
+- Patrones de monedas por niveles (mejora de 6 niveles): filas → arcos → escaleras → rombos → ondas → lluvias → muros; cada nivel trae formaciones con más monedas y grupos un 7% más seguidos.
 - 21 logros (pestaña Estadísticas): cada uno da +1% de monedas por segundo.
 - Guardado automático en el navegador (localStorage, clave `moobs-slayer-save-v1`): monedas, moobs, equipo, mejoras, misiones, estadísticas y configuración. Se guarda cada 5 s, al comprar o reclamar y al cerrar la página; se carga sola al abrir el juego.
 - Panel de patrones de aparición para estudiar y mejorar el respawn.
