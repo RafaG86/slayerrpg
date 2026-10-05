@@ -32,6 +32,7 @@ h1 span { color: var(--ember); }
 #game { display: block; width: 100%; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; touch-action: manipulation; cursor: pointer; }
 .hud { position: absolute; left: 10px; top: 8px; font-family: var(--f-display); font-size: clamp(11px, 2.4vw, 16px); color: var(--ink); text-shadow: 2px 2px 0 #000; pointer-events: none; }
 .hud b { color: var(--ember); font-weight: 700; }
+.hud { max-width: calc(100% - 150px); }
 .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 button { font-family: var(--f-display); font-size: 17px; font-weight: 700; color: var(--night); background: var(--ember); border: 0; border-radius: 4px; padding: 10px 18px; cursor: pointer; box-shadow: 0 4px 0 #b06f1c; transition: transform .06s; }
 button:active { transform: translateY(3px); box-shadow: 0 1px 0 #b06f1c; }
@@ -43,6 +44,16 @@ button.ghost { background: var(--panel); color: var(--ink); box-shadow: 0 4px 0 
 .shop-btn .badge { position: absolute; top: -5px; right: -5px; width: 14px; height: 14px; border-radius: 50%; background: var(--mint); border: 2px solid var(--night); animation: pulse 1.2s ease-in-out infinite; }
 @keyframes pulse { 50% { transform: scale(1.25); } }
 .shop { position: absolute; top: 0; right: 0; bottom: 0; width: min(600px, 100%); box-sizing: border-box; background: rgba(21, 17, 31, .96); border-left: 3px solid var(--line); padding: 12px 14px; overflow-y: auto; display: grid; align-content: start; gap: 12px; }
+.portal-btn { top: 8px; bottom: auto; right: 8px; background: #2a2045; color: #d9c6ff; box-shadow: 0 4px 0 #15102a; font-size: clamp(11px, 2.2vw, 15px); padding: 6px 12px 6px 8px; }
+.portal-btn.ready { background: var(--mint); color: var(--night); box-shadow: 0 4px 0 #2f9a7c; }
+.portal-btn .swirl { width: 14px; height: 14px; border-radius: 50%; border: 3px solid #b48cff; border-right-color: transparent; animation: spin 1.4s linear infinite; }
+.portal-btn.ready .swirl { border-color: var(--night); border-right-color: transparent; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .portal-btn .swirl { animation: none; } }
+.shop.dims { border-left-color: var(--mint); }
+.dim-sw { width: 42px; height: 42px; border-radius: 6px; border: 2px solid var(--line); position: relative; display: block; }
+.dim-sw i { position: absolute; left: 14px; bottom: 7px; width: 12px; height: 9px; border-radius: 6px 6px 3px 3px; border: 1px solid #1a1423; }
+.upgrade.dim.locked { opacity: .5; }
 .asc-btn { right: auto; left: 8px; background: #b48cff; box-shadow: 0 4px 0 #6b4aa8; }
 .asc-btn:active { box-shadow: 0 1px 0 #6b4aa8; }
 .shop.asc { right: auto; left: 0; border-left: 0; border-right: 3px solid #6b4aa8; }
@@ -202,7 +213,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
 
   <div class="stage">
     <canvas id="game" width="240" height="135" aria-label="Escenario: el héroe corriendo solo por una plataforma 2D"></canvas>
-    <div class="hud"><span id="hudName">Slayer</span> · Monedas <b id="hudCoins">0</b> (<b id="hudCps">0</b>/s) <span id="hudMoobsWrap" hidden>· Moobs <b id="hudMoobs">0</b></span> · Estado: <b id="hudState">Corriendo</b></div>
+    <div class="hud"><span id="hudName">Slayer</span> · Monedas <b id="hudCoins">0</b> (<b id="hudCps">0</b>/s) <span id="hudMoobsWrap" hidden>· Moobs <b id="hudMoobs">0</b></span> · <b id="hudDim">Colinas</b> · Estado: <b id="hudState">Corriendo</b></div>
     <div class="toast" id="toast" hidden></div>
     <div class="buffs" id="buffs" aria-live="polite"></div>
     <div class="bonusbar" id="bonusBar" hidden><b>Etapa bonus</b> · <span id="bonusSec">Sección 1/4</span><i><i id="bonusFill"></i></i></div>
@@ -210,6 +221,18 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
       <canvas id="shopIcon" width="12" height="12" aria-hidden="true"></canvas><span>Tienda</span>
       <i class="badge" id="shopBadge" hidden title="Hay algo que puedes comprar"></i>
     </button>
+    <button type="button" class="shop-btn portal-btn" id="portalBtn" aria-expanded="false" aria-controls="dims" hidden>
+      <span class="swirl" aria-hidden="true"></span><span id="portalLabel">Portal</span>
+    </button>
+    <div class="shop dims" id="dims" role="dialog" aria-label="Portal" hidden>
+      <div class="shop-head">
+        <h2>Portal</h2>
+        <span class="wallet" id="portalState"></span>
+        <button type="button" class="shop-close" id="dimsClose" aria-label="Cerrar portal">✕</button>
+      </div>
+      <p class="panel-note">Viaja a otra dimensión: cambian el paisaje, los moobs y los bonos. Después de viajar, el portal necesita 10 minutos para recargarse.</p>
+      <div class="shop-list" id="dimList"></div>
+    </div>
     <button type="button" class="shop-btn asc-btn" id="ascBtn" aria-expanded="false" aria-controls="asc">
       <canvas id="ascIcon" width="12" height="12" aria-hidden="true"></canvas><span>Ascensión</span>
       <i class="badge" id="ascBadge" hidden title="Hay algo para hacer en la ascensión"></i>
@@ -416,6 +439,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
         <button type="button" class="devbtn" id="devBox">Caja ahora</button>
         <button type="button" class="devbtn" id="devGiant">Gigante ahora</button>
         <button type="button" class="devbtn" id="devBonus">Etapa bonus ahora</button>
+        <button type="button" class="devbtn" id="devPortal">Recargar portal</button>
         <button type="button" class="devbtn" id="devUnlock">Desbloquear gratis</button>
         <button type="button" class="devbtn" id="devLock" hidden>Bloquear de nuevo</button>
       </div>
@@ -663,7 +687,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   const hero = { running: true, y: 0, vy: 0, air: false, atkT: -1, animT: 0, aerial: false, pendingAerial: false };
   let scroll = 0, dust = [];
 
-  function jump() { if (!hero.air) { life.jumps++; hero.vy = -215; hero.air = true; for (let i = 0; i < 5; i++) dust.push({ x: HERO_X + rnd(i + scroll) * 8 - 4, y: GROUND, vx: -20 - rnd(i) * 30, vy: -10 - rnd(i * 3) * 20, life: .5 }); } }
+  function jump() { if (!hero.air) { life.jumps++; hero.vy = -JUMPV(); hero.air = true; for (let i = 0; i < 5; i++) dust.push({ x: HERO_X + rnd(i + scroll) * 8 - 4, y: GROUND, vx: -20 - rnd(i) * 30, vy: -10 - rnd(i * 3) * 20, life: .5 }); } }
   function attack() { if (hero.atkT < 0) { life.attacks++; hero.swing = (hero.swing || 0) + 1; hero.atkT = 0; hero.aerial = false; } }
   // DEV: salta y lanza el corte cerca del punto más alto; este corte sí recoge moobs
   function aerialAttack() {
@@ -673,13 +697,47 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   }
   function toggleRun() { hero.running = !hero.running; btnRun.textContent = hero.running ? 'Detener' : 'Correr'; }
 
+  // ---------- dimensiones ----------
+  // Como en Idle Slayer: zonas con su propio paisaje, moobs y bonos. Se viaja con el portal (nodo del árbol).
+  const DIMS = {
+    colinas:  { name: 'Colinas', desc: 'La zona de inicio. Sin bonos.', fx: {}, need: () => true, needText: '',
+      sky: ['#2b1f4a', '#6b3c6e', '#e0805a'], sun: '#ffd59a', ridges: ['#4a2f5c', '#3a2550'], trees: ['#2a1c3c', '#1f1530'], tree: 'pine',
+      ground: { base: '#3d2a3f', brick: '#4c3550', line: '#33233a', dot: '#5c4466', top: '#4f9a6a', topL: '#7fd08f', topD: '#2f6b4a' },
+      moob: ['#c74fd8', '#8a2d9e', '#e48bf0'] },
+    bosque:   { name: 'Bosque', desc: 'Almas ×1.5: cada moob cuenta más.', fx: { soul: 1.5 }, need: () => asc.psBest >= 5, needText: 'Llega a 5 PS',
+      sky: ['#10241f', '#1f4a3a', '#7fb07a'], sun: '#e9f5c9', ridges: ['#1c3a2e', '#15302a'], trees: ['#0f2a1f', '#0a1f17'], tree: 'round',
+      ground: { base: '#3a2a1f', brick: '#4a3626', line: '#2a1e16', dot: '#5c4632', top: '#3f8a3a', topL: '#8fd06f', topD: '#265a22' },
+      moob: ['#5fbf4a', '#2f7a2a', '#a6e88f'] },
+    fabrica:  { name: 'Fábrica', desc: 'Producción ×1.5.', fx: { cps: 1.5 }, need: () => asc.psBest >= 15, needText: 'Llega a 15 PS',
+      sky: ['#1b1b24', '#3b3a4a', '#c47a3a'], sun: '#ffb36b', ridges: ['#2c2b38', '#24232e'], trees: ['#2a2933', '#1e1d26'], tree: 'chimney',
+      ground: { base: '#2e2f36', brick: '#3c3e47', line: '#22232a', dot: '#555866', top: '#7a7f8c', topL: '#b9bfcc', topD: '#4a4e59' },
+      moob: ['#d8823a', '#8f4f1f', '#f2b27a'] },
+    jungla:   { name: 'Jungla', desc: 'Más moobs gigantes (30%) y almas ×1.25.', fx: { soul: 1.25, giant: .3 }, need: () => asc.psBest >= 30, needText: 'Llega a 30 PS',
+      sky: ['#0f2a1a', '#2e6b3a', '#d8d06a'], sun: '#fff1a8', ridges: ['#1f4a2a', '#173d22'], trees: ['#14361f', '#0e2a17'], tree: 'palm',
+      ground: { base: '#3a2f1a', brick: '#4a3c22', line: '#2a2112', dot: '#5c4a2a', top: '#2f9a4a', topL: '#6fe36f', topD: '#1f6a32' },
+      moob: ['#3ac7b8', '#1f7f75', '#8ff0e4'] },
+    desierto: { name: 'Desierto ardiente', desc: 'Valor de monedas ×2.', fx: { coin: 2 }, need: () => asc.psBest >= 60, needText: 'Llega a 60 PS',
+      sky: ['#3a1f2a', '#c4583a', '#f2c14e'], sun: '#fff1a8', ridges: ['#a8553a', '#8f4430'], trees: ['#5a6b2a', '#43501f'], tree: 'cactus',
+      ground: { base: '#c49450', brick: '#d4a460', line: '#a87a3a', dot: '#b8884a', top: '#e8c070', topL: '#fff1b0', topD: '#b8904a' },
+      moob: ['#e04a4a', '#9a2a2a', '#ff9a8a'] },
+    espacio:  { name: 'Espacio funky', desc: 'Gravedad baja y todo ×1.25 (producción, monedas y almas).', fx: { cps: 1.25, coin: 1.25, soul: 1.25, lowGrav: true }, need: () => asc.ultras >= 1, needText: 'Haz una ultra ascensión',
+      sky: ['#05030f', '#1a0f3a', '#4a1f6a'], sun: '#b48cff', ridges: ['#2a1f4a', '#1f1640'], trees: ['#3a2a6a', '#2a1f55'], tree: 'crystal',
+      ground: { base: '#1f1640', brick: '#2a1f55', line: '#140e2e', dot: '#4a3a8a', top: '#b48cff', topL: '#e4d4ff', topD: '#6b4aa8' },
+      moob: ['#4ad8ff', '#1f7fa8', '#b0f0ff'] },
+  };
+  let dimId = 'colinas';
+  const D = () => DIMS[dimId];
+  const dimMult = kind => D().fx[kind] || 1;
+  const GRAV = () => (D().fx.lowGrav ? 420 : 620);
+  const JUMPV = () => (D().fx.lowGrav ? 190 : 215);
+
   function drawSky() {
     const grd = g.createLinearGradient(0, 0, 0, GROUND);
-    grd.addColorStop(0, '#2b1f4a'); grd.addColorStop(.55, '#6b3c6e'); grd.addColorStop(1, '#e0805a');
+    const sk = D().sky; grd.addColorStop(0, sk[0]); grd.addColorStop(.55, sk[1]); grd.addColorStop(1, sk[2]);
     g.fillStyle = grd; g.fillRect(0, 0, W, GROUND);
     // sun
-    g.fillStyle = '#ffd59a'; g.beginPath(); g.arc(178, 66, 17, 0, Math.PI * 2); g.fill();
-    g.fillStyle = 'rgba(255,213,154,.25)'; g.beginPath(); g.arc(178, 66, 23, 0, Math.PI * 2); g.fill();
+    g.fillStyle = D().sun; g.beginPath(); g.arc(178, 66, 17, 0, Math.PI * 2); g.fill();
+    g.globalAlpha = .25; g.beginPath(); g.arc(178, 66, 23, 0, Math.PI * 2); g.fill(); g.globalAlpha = 1;
     // stars
     g.fillStyle = '#efe9ff';
     for (let i = 0; i < 26; i++) { const x = (rnd(i) * W - scroll * .02 + W * 4) % W; const y = rnd(i + 50) * 45; if ((i + Math.floor(performance.now() / 600)) % 7) g.fillRect(x | 0, y | 0, 1, 1); }
@@ -701,24 +759,44 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
       if (rnd(i + seed) < .25) continue;
       const x = Math.round(i * spacing - off + rnd(i * 7 + seed) * 10);
       const h = Math.round((18 + rnd(i * 3 + seed) * 16) * scale);
-      const w = Math.round(h * .45);
-      for (let r = 0; r < h; r++) { const half = Math.max(1, Math.round((r / h) * w)); g.fillRect(x - half, GROUND - 6 * scale - h + r, half * 2, 1); }
-      g.fillRect(x - 1, GROUND - 6 * scale, 2, 6 * scale);
+      const w = Math.round(h * .45), base = GROUND - 6 * scale, shape = D().tree;
+      if (shape === 'pine') {
+        for (let r = 0; r < h; r++) { const half = Math.max(1, Math.round((r / h) * w)); g.fillRect(x - half, base - h + r, half * 2, 1); }
+      } else if (shape === 'round') {
+        const R = Math.round(h * .38), cy = base - h + R;
+        for (let r = -R; r <= R; r++) { const half = Math.round(Math.sqrt(R * R - r * r)); g.fillRect(x - half, cy + r, half * 2, 1); }
+        g.fillRect(x - 1, cy, 2, base - cy);
+      } else if (shape === 'chimney') {
+        const bw = Math.round(w * 1.6); g.fillRect(x - bw, base - Math.round(h * .55), bw * 2, Math.round(h * .55));
+        g.fillRect(x + bw - 5, base - h - 4, 4, h - Math.round(h * .55) + 4);
+      } else if (shape === 'palm') {
+        for (let r = 0; r < h; r++) g.fillRect(x + Math.round(Math.sin(r / h * 1.5) * 3), base - r, 2, 1);
+        const tx = x + Math.round(Math.sin(1.5) * 3), ty = base - h;
+        for (let k = -1; k <= 1; k += 2) for (let i = 0; i < 9; i++) g.fillRect(tx + k * i, ty + Math.round(i * i * .08), 2, 1);
+      } else if (shape === 'cactus') {
+        g.fillRect(x - 2, base - h, 4, h);
+        g.fillRect(x - 7, base - Math.round(h * .6), 3, Math.round(h * .3)); g.fillRect(x - 7, base - Math.round(h * .32), 6, 2);
+        g.fillRect(x + 4, base - Math.round(h * .75), 3, Math.round(h * .3)); g.fillRect(x + 1, base - Math.round(h * .47), 6, 2);
+      } else {
+        for (let r = 0; r < h; r++) { const half = Math.max(1, Math.round((1 - Math.abs(r - h / 2) / (h / 2)) * w * .7)); g.fillRect(x - half, base - h + r, half * 2, 1); }
+      }
+      if (shape === 'pine') g.fillRect(x - 1, base, 2, 6 * scale);
     }
   }
   function drawGround() {
     const off = Math.floor(scroll) % 16;
-    g.fillStyle = '#3d2a3f'; g.fillRect(0, GROUND, W, H - GROUND);
+    const C = D().ground;
+    g.fillStyle = C.base; g.fillRect(0, GROUND, W, H - GROUND);
     for (let x = -16; x < W + 16; x += 16) {
       const tx = x - off;
       const ti = Math.floor((x + Math.floor(scroll)) / 16);
-      g.fillStyle = '#4c3550'; g.fillRect(tx + 1, GROUND + 8, 14, 6);
-      g.fillStyle = '#33233a'; g.fillRect(tx, GROUND + 15, 16, 1);
-      if (rnd(ti) > .6) { g.fillStyle = '#5c4466'; g.fillRect(tx + 4 + (rnd(ti * 2) * 8 | 0), GROUND + 20, 3, 2); }
-      g.fillStyle = '#4f9a6a'; g.fillRect(tx, GROUND, 16, 3);
-      g.fillStyle = '#7fd08f'; g.fillRect(tx, GROUND, 16, 1);
-      g.fillStyle = '#4f9a6a'; if (rnd(ti + 9) > .4) g.fillRect(tx + (rnd(ti + 3) * 13 | 0), GROUND - 2, 1, 2);
-      g.fillStyle = '#2f6b4a'; g.fillRect(tx, GROUND + 3, 16, 1);
+      g.fillStyle = C.brick; g.fillRect(tx + 1, GROUND + 8, 14, 6);
+      g.fillStyle = C.line; g.fillRect(tx, GROUND + 15, 16, 1);
+      if (rnd(ti) > .6) { g.fillStyle = C.dot; g.fillRect(tx + 4 + (rnd(ti * 2) * 8 | 0), GROUND + 20, 3, 2); }
+      g.fillStyle = C.top; g.fillRect(tx, GROUND, 16, 3);
+      g.fillStyle = C.topL; g.fillRect(tx, GROUND, 16, 1);
+      g.fillStyle = C.top; if (rnd(ti + 9) > .4) g.fillRect(tx + (rnd(ti + 3) * 13 | 0), GROUND - 2, 1, 2);
+      g.fillStyle = C.topD; g.fillRect(tx, GROUND + 3, 16, 1);
     }
   }
 
@@ -736,19 +814,19 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   }
   // moob: enemigo tipo slime; los que van por el aire tienen alas
   const moobFlyFrames = [];
-  function moobSprite(f, wings) {
+  function moobSprite(f, wings, pal = D().moob) {
     const cv = document.createElement('canvas'); cv.width = cv.height = 14;
     const c = cv.getContext('2d');
     const sq = [[10, 8], [11, 7], [10, 8], [9, 9]][f], w = sq[0], h = sq[1];
     for (let y = 0; y < h; y++) {
       const t = (y + .5 - h / 2) / (h / 2), hw = Math.max(1, Math.round(Math.sqrt(Math.max(0, 1 - t * t)) * w / 2 + (y > h / 2 ? .5 : 0)));
       const yy = 13 - h + y;
-      c.fillStyle = '#c74fd8'; c.fillRect(7 - hw, yy, hw * 2, 1);
-      c.fillStyle = '#8a2d9e'; c.fillRect(7 + hw - 1, yy, 1, 1);
-      if (y === h - 1) { c.fillStyle = '#8a2d9e'; c.fillRect(7 - hw, yy, hw * 2, 1); }
+      c.fillStyle = pal[0]; c.fillRect(7 - hw, yy, hw * 2, 1);
+      c.fillStyle = pal[1]; c.fillRect(7 + hw - 1, yy, 1, 1);
+      if (y === h - 1) { c.fillStyle = pal[1]; c.fillRect(7 - hw, yy, hw * 2, 1); }
     }
     const top = 13 - h;
-    c.fillStyle = '#e48bf0'; c.fillRect(4, top + 1, 2, 1);
+    c.fillStyle = pal[2]; c.fillRect(4, top + 1, 2, 1);
     c.fillStyle = '#ffffff'; c.fillRect(4, top + 3, 2, 2); c.fillRect(8, top + 3, 2, 2);
     c.fillStyle = '#1a1423'; c.fillRect(5, top + 4, 1, 1); c.fillRect(9, top + 4, 1, 1);
     c.fillRect(4, top + 2, 2, 1); c.fillRect(8, top + 2, 2, 1); // cejas enojadas
@@ -762,7 +840,8 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     outline(c, 14);
     return cv;
   }
-  for (let f = 0; f < 4; f++) { moobFrames.push(moobSprite(f, false)); moobFlyFrames.push(moobSprite(f, true)); }
+  function buildMoobFrames() { moobFrames.length = 0; moobFlyFrames.length = 0; for (let f = 0; f < 4; f++) { moobFrames.push(moobSprite(f, false)); moobFlyFrames.push(moobSprite(f, true)); } }
+  buildMoobFrames();
 
   // moneda: plateada, más pequeña, con un rombo
   const coinFrames = [];
@@ -873,7 +952,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   const msCost = (e, m) => Math.ceil(e.base * Math.pow(COST_MULT, m) * 5);
   const pieceMult = e => 1 + MILESTONES.filter(m => eqUps.has(`${e.id}@${m}`)).length;
   const pieceCps = e => e.cps * e.lv * pieceMult(e);
-  const totalCps = () => EQUIP.reduce((s, e) => s + pieceCps(e), 0) * prestigeMult() * achMult() * buffMult('cps');
+  const totalCps = () => EQUIP.reduce((s, e) => s + pieceCps(e), 0) * prestigeMult() * achMult() * buffMult('cps') * dimMult('cps');
   function buyMilestone(key) {
     const [id, m] = key.split('@'), e = EQUIP.find(x => x.id === id), lvl = +m;
     if (!e || eqUps.has(key) || e.lv < lvl) return;
@@ -910,7 +989,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   // ---------- ascensión ----------
   // Modelo Idle Slayer: los moobs derrotados son las "almas". Se convierten en Puntos Slayer (PS) al ascender.
   // Cada PS cuesta 4 moobs más que el anterior; cada PS ganado da +1% de monedas por segundo para siempre.
-  const asc = { psAvail: 0, psTotal: 0, nodes: new Set(), count: 0, usp: 0, uspTotal: 0, ultras: 0, stones: { act: 0, idle: 0 } };
+  const asc = { psBest: 0, psAvail: 0, psTotal: 0, nodes: new Set(), count: 0, usp: 0, uspTotal: 0, ultras: 0, stones: { act: 0, idle: 0 } };
   const has = id => asc.nodes.has(id);
   const psCost = n => 5 + 4 * n;
   function pendingPS() {
@@ -930,6 +1009,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     { id: 'almas',       name: 'Segador de almas',   cost: 4,  desc: '25% de probabilidad de que un moob derrotado cuente doble.' },
     { id: 'grupos4',     name: 'Hordas',             cost: 5,  desc: 'Los grupos pueden traer hasta 4 monedas o moobs.' },
     { id: 'herencia',    name: 'Herencia',           cost: 6,  desc: 'Conservas el 10% de tus monedas al ascender.' },
+    { id: 'portales',    name: 'Portales',           cost: 3,  desc: 'Desbloquea el portal para viajar entre dimensiones.' },
     { id: 'ultra',       name: 'Puerta ultra',       cost: 10, desc: 'Desbloquea la ultra ascensión.' },
   ];
   function buyNode(id) {
@@ -950,7 +1030,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   function ascend() {
     const p = pendingPS();
     if (p.k < 1) return;
-    asc.psTotal += p.k; asc.psAvail += p.k; asc.count++;
+    asc.psTotal += p.k; asc.psAvail += p.k; asc.count++; asc.psBest = Math.max(asc.psBest, asc.psTotal);
     resetRun();
     renderStats(); saveGame(); setAsc(false); toast(`Ascendiste: +${p.k} PS`);
   }
@@ -993,7 +1073,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   }
 
   // ---------- estadísticas de por vida ----------
-  const freshLife = () => ({ bonusRuns: 0, bonusClears: 0, boosts: 0, boxes: 0, giants: 0, passive: 0, coins: 0, moobs: 0, jumps: 0, attacks: 0, perfect: 0, groups: 0, streak: 0, bestStreak: 0, equipBought: 0, moobsUnlocked: 0, spent: 0, dist: 0, time: 0 });
+  const freshLife = () => ({ travels: 0, bonusRuns: 0, bonusClears: 0, boosts: 0, boxes: 0, giants: 0, passive: 0, coins: 0, moobs: 0, jumps: 0, attacks: 0, perfect: 0, groups: 0, streak: 0, bestStreak: 0, equipBought: 0, moobsUnlocked: 0, spent: 0, dist: 0, time: 0 });
   let life = freshLife();
 
   let items = [], group = null, waitT = .6, altHigh = false, clock = 0, fx = [];
@@ -1110,6 +1190,8 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     { id: 'a1',     name: 'Renacer',            text: 'Asciende por primera vez',    prog: () => asc.count,     goal: 1 },
     { id: 'u1',     name: 'Más allá',           text: 'Haz una ultra ascensión',     prog: () => asc.ultras,    goal: 1 },
     { id: 'bn1',    name: 'Otra dimensión',     text: 'Entra a una etapa bonus',     prog: () => life.bonusRuns, goal: 1 },
+    { id: 'tr1',    name: 'Viajero',            text: 'Viaja por el portal',         prog: () => life.travels,  goal: 1 },
+    { id: 'trall',  name: 'Turista dimensional', text: 'Visita las 6 dimensiones',   prog: () => visited.size,  goal: 6 },
     { id: 'bnc',    name: 'Sin caerse',         text: 'Completa una etapa bonus',    prog: () => life.bonusClears, goal: 1 },
   ];
   const achieved = new Set();
@@ -1138,7 +1220,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
       for (let k = 0; k < 4; k++) {
         const gap = 22 + s * 4 + Math.random() * 8;
         // arco de monedas que sigue la trayectoria del salto sobre el hueco
-        for (let t = .1; t <= .61; t += .1) its.push({ wx: cur - 8 + 90 * t, y: GROUND - 11 + (-215 * t + 310 * t * t), type: 'moneda', alive: true });
+        const air = 2 * JUMPV() / GRAV(); for (let t = air * .15; t <= air * .9; t += air * .15) its.push({ wx: cur - 8 + 90 * t, y: GROUND - 11 + (-JUMPV() * t + GRAV() / 2 * t * t), type: 'moneda', alive: true });
         const a = cur + gap, len = 70 + Math.random() * 70;
         segs.push({ a, b: a + len });
         if (Math.random() < .5 && UPGRADES.moobs.owned) its.push({ wx: a + len * .55, y: GROUND - 9, type: 'moob', alive: true });
@@ -1172,10 +1254,10 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     it.alive = false;
     let amt;
     if (it.type === 'moneda') {
-      amt = (1 + 2 * totalCps()) * buffMult('coin') * (1 + actBonus());
+      amt = (1 + 2 * totalCps()) * buffMult('coin') * dimMult('coin') * (1 + actBonus());
       wallet.moneda += amt; life.coins += amt; bonus.coins += amt;
     } else {
-      amt = (has('almas') && Math.random() < .25 ? 2 : 1) * buffMult('soul') * (1 + actBonus());
+      amt = (has('almas') && Math.random() < .25 ? 2 : 1) * buffMult('soul') * dimMult('soul') * (1 + actBonus());
       wallet.moob += amt; life.moobs += amt; bonus.moobs += amt;
     }
     const T = ITEM[it.type];
@@ -1251,7 +1333,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   function spawnGroup() {
     let g0 = PATTERNS[cfg.pattern]();
     if (UPGRADES.moobs.owned && hordeLeft > 0) { hordeLeft--; g0 = { type: 'moob', count: 5, hk: pick(ALLOWED.moob), gap: randInt(30, 70) }; }
-    else if (UPGRADES.moobs.owned && cfg.pattern === 'grupos' && Math.random() < GIANT.chance) g0 = { type: 'moob', count: 1, hk: 'bajo', gap: randInt(40, 100), giant: true };
+    else if (UPGRADES.moobs.owned && cfg.pattern === 'grupos' && Math.random() < (D().fx.giant || GIANT.chance)) g0 = { type: 'moob', count: 1, hk: 'bajo', gap: randInt(40, 100), giant: true };
     stats.n++;
     group = { n: stats.n, ...g0, got: 0, miss: 0, air: 0, done: false };
     const start = scroll + W + 8 + g0.gap;
@@ -1276,10 +1358,10 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
       if (group.type === 'moneda') {
         if (has('reinversion')) amt += .1 * totalCps();
         if (Math.random() < derived().double) amt *= 2;
-        amt *= buffMult('coin');
+        amt *= buffMult('coin') * dimMult('coin');
       } else {
         if (has('almas') && Math.random() < .25) amt *= 2;
-        amt *= buffMult('soul');
+        amt *= buffMult('soul') * dimMult('soul');
         if (group.giant) life.giants++;
       }
       amt *= 1 + actBonus();
@@ -1301,8 +1383,8 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   const dev = { autoAtk: false, autoCol: false };
   function jumpWouldHit(cy, dx, v) {
     if (v <= 0 || dx < 0) return false;
-    const t = dx / v, y = -215 * t + 310 * t * t; // misma física del salto (vy0 = -215, g = 620)
-    if (t > .69) return false; // ya habría aterrizado
+    const t = dx / v, y = -JUMPV() * t + GRAV() / 2 * t * t; // misma física del salto
+    if (t > 2 * JUMPV() / GRAV()) return false; // ya habría aterrizado
     return cy > GROUND - 22 + y - 5 && cy < GROUND + y;
   }
   function autoPlay() {
@@ -1580,6 +1662,49 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     adots[0].hidden = !ready; adots[1].hidden = !canNode; adots[2].hidden = !(asc.usp >= 1 || (ul && ultraGain() >= 1));
     document.getElementById('ascBadge').hidden = !(ready || canNode || asc.usp >= 1);
   }
+  // ---------- portal ----------
+  const PORTAL_CD = 10 * 60 * 1000;
+  const portal = { readyAt: 0 };
+  const visited = new Set(['colinas']);
+  let flashT = 0;
+  const portalLeft = () => Math.max(0, portal.readyAt - Date.now());
+  const mmss = ms => { const t = Math.ceil(ms / 1000); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`; };
+  function travel(id) {
+    const d = DIMS[id];
+    if (!d || id === dimId || !d.need() || portalLeft() > 0 || bonus.on || !has('portales')) return;
+    dimId = id; visited.add(id); life.travels++;
+    portal.readyAt = Date.now() + PORTAL_CD;
+    buildMoobFrames();
+    items = []; group = null; waitT = 1; box.on = false; orb.on = false;
+    flashT = .6;
+    setDims(false);
+    toast(`Viajaste a: ${d.name}`);
+    renderStats(); saveGame();
+  }
+  function renderDims() {
+    const left = portalLeft();
+    document.getElementById('portalBtn').hidden = !has('portales') || !shopEl.hidden || !ascEl.hidden || !dimsEl.hidden;
+    document.getElementById('portalLabel').textContent = left > 0 ? `Portal · ${mmss(left)}` : 'Portal';
+    document.getElementById('portalBtn').classList.toggle('ready', left === 0);
+    document.getElementById('hudDim').textContent = D().name;
+    if (dimsEl.hidden) return;
+    document.getElementById('portalState').textContent = left > 0 ? `Recarga: ${mmss(left)}` : 'Listo';
+    const list = document.getElementById('dimList');
+    if (!built.dims) {
+      list.innerHTML = Object.entries(DIMS).map(([id, d]) => `<article class="upgrade dim" data-dim="${id}">
+        <span class="dim-sw" style="background:linear-gradient(${d.sky[0]},${d.sky[1]} 55%,${d.sky[2]} 75%,${d.ground.top} 76%,${d.ground.base})"><i style="background:${d.moob[0]}"></i></span>
+        <div class="up-body"><h3>${d.name}</h3><p>${d.desc}</p><p class="up-state"></p></div>
+        <div class="up-buy"><button type="button" data-travel="${id}">Viajar</button></div>
+      </article>`).join('');
+      built.dims = true;
+    }
+    Object.entries(DIMS).forEach(([id, d]) => {
+      const card = list.querySelector(`[data-dim="${id}"]`), here = id === dimId, ok = d.need();
+      card.classList.toggle('owned', here); card.classList.toggle('locked', !ok);
+      card.querySelector('.up-state').textContent = here ? 'Estás aquí.' : !ok ? `Bloqueada: ${d.needText}.` : left > 0 ? `Disponible en ${mmss(left)}.` : bonus.on ? 'Termina la etapa bonus primero.' : 'Lista para viajar.';
+      const b = card.querySelector('button'); b.hidden = here; b.disabled = !ok || left > 0 || bonus.on;
+    });
+  }
   function renderBuffs() {
     const chips = buffs.map(b => `<span>${b.name} · ${Math.ceil(b.t)} s</span>`);
     if (boost.t > 0) chips.unshift(`<span class="boost">Boost · ${Math.ceil(boost.t)} s</span>`);
@@ -1604,6 +1729,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
       ['Ascensiones', nf(asc.count)], ['Puntos Slayer ganados', nf(asc.psTotal)],
       ['Ultra ascensiones', nf(asc.ultras)], ['PUS ganados', nf(asc.uspTotal)],
       ['Boosts usados', nf(life.boosts)], ['Cajas abiertas', nf(life.boxes)],
+      ['Dimensión actual', D().name], ['Viajes por portal', nf(life.travels)],
       ['Gigantes derrotados', nf(life.giants)], ['Etapas bonus', `${nf(life.bonusClears)} completas de ${nf(life.bonusRuns)}`], ['Logros', `${achieved.size} / ${ACH.length}`],
       ['Monedas por segundo', fmtCps(totalCps())], ['Monedas pasivas', fmt(life.passive)],
       ['Monedas gastadas', fmt(life.spent)], ['Piezas compradas', nf(life.equipBought)],
@@ -1623,7 +1749,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   let last = performance.now(), prevRunFrame = -1, uiTick = 0, shopTick = 0;
   function loop(now) {
     let dt = Math.max(0, Math.min(.05, (now - last) / 1000)); last = now;
-    if (cfg.pauseShop && (!shopEl.hidden || !ascEl.hidden)) dt = 0;
+    if (cfg.pauseShop && (!shopEl.hidden || !ascEl.hidden || !dimsEl.hidden)) dt = 0;
     const speed = currentSpeed();
     boost.t = Math.max(0, boost.t - dt); boost.cd = Math.max(0, boost.cd - dt);
     buffs.forEach(b => { b.t -= dt; }); buffs = buffs.filter(b => b.t > 0);
@@ -1634,7 +1760,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
 
     // physics
     if (hero.air) {
-      hero.vy += 620 * dt; hero.y += hero.vy * dt;
+      hero.vy += GRAV() * dt; hero.y += hero.vy * dt;
       if (hero.y >= 0 && hero.y < 8 && groundAt(scroll + HERO_X)) { hero.y = 0; hero.vy = 0; hero.air = false; for (let i = 0; i < 4; i++) dust.push({ x: HERO_X + (i - 1.5) * 3, y: GROUND, vx: (i - 1.5) * 18, vy: -14, life: .4 }); }
     }
     if (bonus.on && !hero.air && !groundAt(scroll + HERO_X)) { hero.air = true; hero.vy = 0; }
@@ -1665,12 +1791,12 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
 
     // draw
     drawSky();
-    drawRidge(.08, 74, 11, '#4a2f5c', 1);
-    drawRidge(.2, 88, 8, '#3a2550', 4);
+    drawRidge(.08, 74, 11, D().ridges[0], 1);
+    drawRidge(.2, 88, 8, D().ridges[1], 4);
     if (bonus.on) { drawBonusWorld(); drawSpeedLines(); }
     else {
-      drawTrees(.45, '#2a1c3c', .75, 11);
-      drawTrees(.7, '#1f1530', .95, 23);
+      drawTrees(.45, D().trees[0], .75, 11);
+      drawTrees(.7, D().trees[1], .95, 23);
       drawGround();
       drawSpeedLines();
       drawMoob();
@@ -1691,12 +1817,13 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     for (const d of dust) { d.x += (d.vx - speed * .3) * dt; d.y += d.vy * dt; d.vy += 30 * dt; g.fillStyle = `rgba(239,233,255,${Math.min(1, d.life * 2) * .6})`; g.fillRect(d.x | 0, d.y | 0, 2, 2); }
 
     drawFx(dt);
+    if (flashT > 0) { flashT -= dt; g.fillStyle = `rgba(217,198,255,${Math.max(0, flashT / .6)})`; g.fillRect(0, 0, W, H); }
     if ((uiTick += dt) > .1) {
       uiTick = 0; renderNext();
       document.getElementById('hudCoins').textContent = fmt(wallet.moneda);
       document.getElementById('statCoins').textContent = fmt(wallet.moneda);
       document.getElementById('shopCoins').textContent = fmt(wallet.moneda);
-      renderBuffs();
+      renderBuffs(); renderDims();
       if ((shopTick = (shopTick || 0) + 1) % 3 === 0) { renderShop(); renderUpgrade(); }
       if (shopTick % 5 === 0) checkAch();
     }
@@ -1773,14 +1900,25 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   // ---------- tienda ----------
   const shopEl = document.getElementById('shop'), shopBtn = document.getElementById('shopBtn');
   const ascEl = document.getElementById('asc'), ascBtn = document.getElementById('ascBtn');
+  const dimsEl = document.getElementById('dims'), portalBtn = document.getElementById('portalBtn');
+  function setDims(open, quiet) {
+    if (open) { setShop(false); setAsc(false, true); }
+    dimsEl.hidden = !open; shopBtn.hidden = open; ascBtn.hidden = open;
+    portalBtn.setAttribute('aria-expanded', String(open));
+    renderDims();
+    if (open) document.getElementById('dimsClose').focus(); else if (!quiet && !portalBtn.hidden) portalBtn.focus();
+  }
+  portalBtn.addEventListener('click', () => setDims(true));
+  document.getElementById('dimsClose').addEventListener('click', () => setDims(false));
+  document.getElementById('dimList').addEventListener('click', e => { const b = e.target.closest('[data-travel]'); if (b) travel(b.dataset.travel); });
   function setShop(open) {
-    if (open) setAsc(false, true);
+    if (open) { setAsc(false, true); if (!dimsEl.hidden) setDims(false, true); }
     shopEl.hidden = !open; shopBtn.hidden = open; ascBtn.hidden = open;
     shopBtn.setAttribute('aria-expanded', String(open));
     if (open) { renderShop(); document.getElementById('shopClose').focus(); } else shopBtn.focus();
   }
   function setAsc(open, quiet) {
-    if (open) setShop(false);
+    if (open) { setShop(false); if (!dimsEl.hidden) setDims(false, true); }
     ascEl.hidden = !open; ascBtn.hidden = open; shopBtn.hidden = open;
     ascBtn.setAttribute('aria-expanded', String(open));
     document.getElementById('ascConfirm').hidden = true; document.getElementById('ultraConfirm').hidden = true;
@@ -1794,6 +1932,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     if (e.target === nameInput) return;
     if (e.code === 'Escape' && !shopEl.hidden) setShop(false);
     else if (e.code === 'Escape' && !ascEl.hidden) setAsc(false);
+    else if (e.code === 'Escape' && !dimsEl.hidden) setDims(false);
     else if (e.code === 'KeyT') setShop(shopEl.hidden);
     else if (e.code === 'KeyY') setAsc(ascEl.hidden);
   });
@@ -1838,8 +1977,9 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     wallet.moneda = 0; wallet.moob = 0;
     EQUIP.forEach(e => { e.lv = 0; }); eqUps.clear();
     UPGRADES.moobs.owned = false; claimed.clear();
-    Object.assign(asc, { psAvail: 0, psTotal: 0, count: 0, usp: 0, uspTotal: 0, ultras: 0, stones: { act: 0, idle: 0 } }); asc.nodes.clear();
+    Object.assign(asc, { psBest: 0, psAvail: 0, psTotal: 0, count: 0, usp: 0, uspTotal: 0, ultras: 0, stones: { act: 0, idle: 0 } }); asc.nodes.clear();
     if (bonus.on) { bonus.on = false; document.getElementById('bonusBar').hidden = true; hero.y = 0; hero.air = false; } orb.on = false; orb.timer = 90;
+    dimId = 'colinas'; buildMoobFrames(); visited.clear(); visited.add('colinas'); portal.readyAt = 0;
     life = freshLife(); achieved.clear(); silverBoxes = 0; buffs = []; boost.t = boost.cd = 0; hordeLeft = 0; box.on = false; box.timer = 20;
     stats.got = stats.miss = stats.n = 0; stats.lifeMiss = 0; stats.log = [];
     items = []; group = null; waitT = .6; altHigh = false;
@@ -1877,9 +2017,10 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   }
   document.getElementById('devSouls').addEventListener('click', () => { wallet.moob += 20; life.moobs += 20; renderStats(); });
   document.getElementById('devBonus').addEventListener('click', () => startBonus());
+  document.getElementById('devPortal').addEventListener('click', () => { portal.readyAt = 0; renderDims(); });
   document.getElementById('devBox').addEventListener('click', () => { life.spent = Math.max(life.spent, 100); box.on = true; box.wx = scroll + W + 20; box.silver = false; });
   document.getElementById('devGiant').addEventListener('click', () => { if (!UPGRADES.moobs.owned) buyMoobs(true); items = []; group = null; waitT = 99; const old = cfg.pattern; spawnGiant(); });
-  document.getElementById('devPS').addEventListener('click', () => { asc.psAvail += 5; asc.psTotal += 5; renderStats(); });
+  document.getElementById('devPS').addEventListener('click', () => { asc.psAvail += 5; asc.psTotal += 5; asc.psBest = Math.max(asc.psBest, asc.psTotal); renderStats(); });
   document.getElementById('devUnlock').addEventListener('click', () => buyMoobs(true));
   document.getElementById('devLock').addEventListener('click', lockMoobs);
   document.getElementById('devCoins').addEventListener('click', () => { wallet.moneda += 10; renderStats(); });
@@ -1904,6 +2045,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
       stats: { got: stats.got, miss: stats.miss, n: stats.n, lifeMiss: stats.lifeMiss || 0 },
       dev: { ...dev },
       ach: [...achieved], silver: silverBoxes,
+      dim: dimId, visited: [...visited], portalReady: portal.readyAt,
       cfg: { guides: cfg.guides, particles: cfg.particles, pauseShop: cfg.pauseShop, hud: cfg.hud !== false, pattern: cfg.pattern, delay: cfg.delay },
     };
   }
@@ -1928,6 +2070,9 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     const c = d.cfg || {};
     achieved.clear(); (d.ach || []).forEach(id => { if (ACH.some(a => a.id === id)) achieved.add(id); });
     silverBoxes = Math.floor(num(d.silver));
+    if (DIMS[d.dim]) { dimId = d.dim; buildMoobFrames(); }
+    (d.visited || []).forEach(id => { if (DIMS[id]) visited.add(id); });
+    portal.readyAt = num(d.portalReady);
     dev.autoAtk = !!d.dev?.autoAtk; dev.autoCol = !!d.dev?.autoCol;
     document.getElementById('btnAutoAtk').setAttribute('aria-pressed', String(dev.autoAtk));
     document.getElementById('btnAutoCol').setAttribute('aria-pressed', String(dev.autoCol));
@@ -1942,7 +2087,8 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     patternSel.value = cfg.pattern; delayIn.value = cfg.delay;
     document.getElementById('delayOut').textContent = cfg.delay.toFixed(1) + ' s';
     const a = d.asc || {};
-    for (const k of ['psAvail', 'psTotal', 'count', 'usp', 'uspTotal', 'ultras']) asc[k] = Math.floor(num(a[k]));
+    for (const k of ['psBest', 'psAvail', 'psTotal', 'count', 'usp', 'uspTotal', 'ultras']) asc[k] = Math.floor(num(a[k]));
+    asc.psBest = Math.max(asc.psBest, asc.psTotal);
     asc.stones = { act: Math.floor(num(a.stones?.act)), idle: Math.floor(num(a.stones?.idle)) };
     asc.nodes.clear(); (a.nodes || []).forEach(id => { if (TREE.some(n => n.id === id)) asc.nodes.add(id); });
     if (has('cazador')) UPGRADES.moobs.owned = true;
