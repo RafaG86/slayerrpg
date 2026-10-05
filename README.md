@@ -11,8 +11,9 @@ Abre `moobs-slayer/index.html` en el navegador para jugar. No necesita instalaci
 - **Espacio / W / ↑**: saltar
 - **J**: atacar
 - **K**: ataque en altura (solo desarrollo)
+- Botones DEV **Autoataque** y **Autorecogida**: el héroe ataca a los moobs y salta solo en el momento que alcanza más objetos del grupo.
 - **P**: correr / detener
-- **T**: tienda · **Y**: ascensión
+- **B**: boost · **T**: tienda · **Y**: ascensión
 
 ### Estado actual
 
@@ -32,5 +33,9 @@ Abre `moobs-slayer/index.html` en el navegador para jugar. No necesita instalaci
   - Árbol de 8 nodos pagados con PS (más producción, moobs desde el inicio, reinversión, hordas de 4, herencia, puerta ultra…).
   - Ultra ascensión (se desbloquea en el árbol): borra PS y árbol y da Puntos Ultra Slayer = raíz cuadrada de los PS. Se gastan en las Piedras del Tiempo: Actividad (valor de monedas y moobs) e Inactividad (ganancia sin conexión), con rendimiento decreciente.
   - Ganancia sin conexión: 10% de la producción (más con la Piedra de Inactividad), hasta 8 horas.
+- Boost (botón o B): 75 monedas, velocidad ×3.5 durante 10 s y 30 s de espera.
+- Cajas aleatorias (desde 100 monedas gastadas): aparecen cada 30–120 s en altura y se abren saltando. Eventos: producción ×20, monedas ×10, lluvia de monedas, almas ×5, horda de moobs y boost gratis. Los efectos se acumulan; 1 de cada 10 cajas es plateada y se guarda para abrirla después.
+- Moobs gigantes: 12% de los grupos; 4 de vida, se dañan con el toque y el ataque, frenan al héroe mientras pelea y dan 25 moobs.
+- 16 logros (pestaña Estadísticas): cada uno da +1% de monedas por segundo.
 - Guardado automático en el navegador (localStorage, clave `moobs-slayer-save-v1`): monedas, moobs, equipo, mejoras, misiones, estadísticas y configuración. Se guarda cada 5 s, al comprar o reclamar y al cerrar la página; se carga sola al abrir el juego.
 - Panel de patrones de aparición para estudiar y mejorar el respawn.

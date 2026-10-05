@@ -91,6 +91,19 @@ button.tab[aria-selected="true"] { background: var(--panel); color: var(--ink); 
 .savebox p { margin: 0; color: var(--dim); font-size: 13px; }
 .savebox .save-state { color: var(--ink); }
 .savebox button { justify-self: start; font-size: 14px; }
+.buffs { position: absolute; left: 10px; top: 32px; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none; max-width: 60%; }
+.buffs span { font-family: var(--f-display); font-size: clamp(10px, 2vw, 13px); background: rgba(21, 17, 31, .85); color: var(--ember); border: 1px solid var(--ember); border-radius: 3px; padding: 1px 6px; }
+.buffs span.boost { color: var(--mint); border-color: var(--mint); }
+button.boostbtn { background: var(--mint); box-shadow: 0 4px 0 #2f9a7c; }
+button.boostbtn:active { box-shadow: 0 1px 0 #2f9a7c; }
+button.silverbtn { background: #d9e2ec; box-shadow: 0 4px 0 #8a9bb0; }
+.ach-head { font-family: var(--f-display); font-size: 17px; margin: 8px 0 0; }
+.ach { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.ach div { background: var(--night); border: 1px solid var(--line); border-radius: 4px; padding: 6px 8px; font-size: 13px; color: var(--dim); }
+.ach div.ok { border-color: var(--mint); color: var(--ink); }
+.ach b { display: block; font-family: var(--f-display); font-size: 14px; color: var(--ink); }
+.ach div.ok b::after { content: " ✓"; color: var(--mint); }
+@media (max-width: 520px) { .ach { grid-template-columns: minmax(0, 1fr); } }
 .toast { position: absolute; left: 50%; top: 40px; transform: translateX(-50%); font-family: var(--f-display); font-size: clamp(12px, 2.4vw, 16px); background: rgba(21, 17, 31, .9); color: var(--mint); border: 1px solid var(--mint); border-radius: 4px; padding: 4px 12px; pointer-events: none; transition: opacity .4s; }
 .danger { display: grid; gap: 6px; border: 1px dashed #ff7a8a; border-radius: 6px; padding: 10px 12px; }
 .danger h3 { font-family: var(--f-display); font-size: 16px; margin: 0; color: #ff7a8a; }
@@ -124,6 +137,10 @@ button:disabled { opacity: .45; cursor: not-allowed; transform: none; }
 .dev-tag { font-family: var(--f-display); font-size: 12px; letter-spacing: .1em; color: var(--night); background: #ff8fb8; border-radius: 3px; padding: 1px 6px; }
 button.devbtn { background: #ff8fb8; box-shadow: 0 4px 0 #b0496f; font-size: 15px; padding: 8px 14px; }
 button.devbtn:active { box-shadow: 0 1px 0 #b0496f; }
+button.devbtn.toggle { background: var(--panel); color: #ff8fb8; box-shadow: 0 4px 0 var(--line); border: 2px solid #ff8fb8; }
+button.devbtn.toggle::before { content: "○ "; }
+button.devbtn.toggle[aria-pressed="true"] { background: #ff8fb8; color: var(--night); box-shadow: 0 4px 0 #b0496f; }
+button.devbtn.toggle[aria-pressed="true"]::before { content: "● "; }
 button:focus-visible, input:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
 .keys { color: var(--dim); font-size: 13px; margin-left: auto; }
 kbd { font-family: var(--f-display); background: var(--panel); border: 1px solid var(--line); border-bottom-width: 3px; border-radius: 3px; padding: 0 5px; color: var(--ink); }
@@ -183,6 +200,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     <canvas id="game" width="240" height="135" aria-label="Escenario: el héroe corriendo solo por una plataforma 2D"></canvas>
     <div class="hud"><span id="hudName">Slayer</span> · Monedas <b id="hudCoins">0</b> (<b id="hudCps">0</b>/s) <span id="hudMoobsWrap" hidden>· Moobs <b id="hudMoobs">0</b></span> · Estado: <b id="hudState">Corriendo</b></div>
     <div class="toast" id="toast" hidden></div>
+    <div class="buffs" id="buffs" aria-live="polite"></div>
     <button type="button" class="shop-btn" id="shopBtn" aria-expanded="false" aria-controls="shop">
       <canvas id="shopIcon" width="12" height="12" aria-hidden="true"></canvas><span>Tienda</span>
       <i class="badge" id="shopBadge" hidden title="Hay algo que puedes comprar"></i>
@@ -318,6 +336,8 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
       </section>
       <section class="panel" role="tabpanel" id="panel-stats" aria-labelledby="tab-stats" hidden>
         <dl class="stats life" id="lifeStats"></dl>
+        <h3 class="ach-head" id="achHead">Logros</h3>
+        <div class="ach" id="achList"></div>
       </section>
     </div>
   </div>
@@ -326,11 +346,15 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     <button id="btnJump" type="button">Saltar</button>
     <button id="btnAttack" type="button" class="alt">Atacar</button>
     <button id="btnRun" type="button" class="ghost">Detener</button>
+    <button id="btnBoost" type="button" class="boostbtn">Boost · 75</button>
+    <button id="btnSilver" type="button" class="silverbtn" hidden>Abrir caja plateada (<span id="silverN">0</span>)</button>
     <div class="dev" title="Solo para desarrollo: los jugadores recogen los moobs saltando">
       <span class="dev-tag">DEV</span>
       <button id="btnAerial" type="button" class="devbtn">Ataque en altura</button>
+      <button id="btnAutoAtk" type="button" class="devbtn toggle" aria-pressed="false">Autoataque</button>
+      <button id="btnAutoCol" type="button" class="devbtn toggle" aria-pressed="false">Autorecogida</button>
     </div>
-    <span class="keys"><kbd>Espacio</kbd> saltar · <kbd>J</kbd> atacar · <kbd>K</kbd> ataque en altura · <kbd>P</kbd> correr/detener · <kbd>T</kbd> tienda · <kbd>Y</kbd> ascensión</span>
+    <span class="keys"><kbd>Espacio</kbd> saltar · <kbd>J</kbd> atacar · <kbd>K</kbd> ataque en altura · <kbd>P</kbd> correr/detener · <kbd>B</kbd> boost · <kbd>T</kbd> tienda · <kbd>Y</kbd> ascensión</span>
   </div>
 
   <div class="grid">
@@ -384,6 +408,8 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
         <button type="button" class="devbtn" id="devCoinsBig">+10 K monedas</button>
         <button type="button" class="devbtn" id="devSouls">+20 moobs</button>
         <button type="button" class="devbtn" id="devPS">+5 PS</button>
+        <button type="button" class="devbtn" id="devBox">Caja ahora</button>
+        <button type="button" class="devbtn" id="devGiant">Gigante ahora</button>
         <button type="button" class="devbtn" id="devUnlock">Desbloquear gratis</button>
         <button type="button" class="devbtn" id="devLock" hidden>Bloquear de nuevo</button>
       </div>
@@ -632,7 +658,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   let scroll = 0, dust = [];
 
   function jump() { if (!hero.air) { life.jumps++; hero.vy = -215; hero.air = true; for (let i = 0; i < 5; i++) dust.push({ x: HERO_X + rnd(i + scroll) * 8 - 4, y: GROUND, vx: -20 - rnd(i) * 30, vy: -10 - rnd(i * 3) * 20, life: .5 }); } }
-  function attack() { if (hero.atkT < 0) { life.attacks++; hero.atkT = 0; hero.aerial = false; } }
+  function attack() { if (hero.atkT < 0) { life.attacks++; hero.swing = (hero.swing || 0) + 1; hero.atkT = 0; hero.aerial = false; } }
   // DEV: salta y lanza el corte cerca del punto más alto; este corte sí recoge moobs
   function aerialAttack() {
     if (hero.atkT >= 0) return;
@@ -841,7 +867,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   const msCost = (e, m) => Math.ceil(e.base * Math.pow(COST_MULT, m) * 5);
   const pieceMult = e => 1 + MILESTONES.filter(m => eqUps.has(`${e.id}@${m}`)).length;
   const pieceCps = e => e.cps * e.lv * pieceMult(e);
-  const totalCps = () => EQUIP.reduce((s, e) => s + pieceCps(e), 0) * prestigeMult();
+  const totalCps = () => EQUIP.reduce((s, e) => s + pieceCps(e), 0) * prestigeMult() * achMult() * buffMult('cps');
   function buyMilestone(key) {
     const [id, m] = key.split('@'), e = EQUIP.find(x => x.id === id), lvl = +m;
     if (!e || eqUps.has(key) || e.lv < lvl) return;
@@ -960,33 +986,167 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   }
 
   // ---------- estadísticas de por vida ----------
-  const freshLife = () => ({ passive: 0, coins: 0, moobs: 0, jumps: 0, attacks: 0, perfect: 0, groups: 0, streak: 0, bestStreak: 0, equipBought: 0, moobsUnlocked: 0, spent: 0, dist: 0, time: 0 });
+  const freshLife = () => ({ boosts: 0, boxes: 0, giants: 0, passive: 0, coins: 0, moobs: 0, jumps: 0, attacks: 0, perfect: 0, groups: 0, streak: 0, bestStreak: 0, equipBought: 0, moobsUnlocked: 0, spent: 0, dist: 0, time: 0 });
   let life = freshLife();
 
   let items = [], group = null, waitT = .6, altHigh = false, clock = 0, fx = [];
   const wallet = { moob: 0, moneda: 0 };
   const stats = { got: 0, miss: 0, n: 0, log: [] };
+  // ---------- boost, cajas aleatorias, efectos temporales, gigantes y logros ----------
+  const BOOST = { cost: 75, dur: 10, cd: 30, mult: 3.5 };
+  const boost = { t: 0, cd: 0 };
+  function startBoost(free) {
+    if (!free) {
+      if (boost.cd > 0 || wallet.moneda < BOOST.cost) return;
+      wallet.moneda -= BOOST.cost; life.spent += BOOST.cost;
+    }
+    boost.t = BOOST.dur; boost.cd = BOOST.dur + BOOST.cd; life.boosts++;
+    renderStats();
+  }
+  // al chocar con un gigante el héroe se frena para pelear con él
+  const fightingGiant = () => group && group.giant && items[0] && items[0].alive && Math.abs(items[0].wx - scroll - HERO_X) < 16;
+  const currentSpeed = () => hero.running ? 90 * derived().speed * (boost.t > 0 ? BOOST.mult : 1) * (fightingGiant() ? .12 : 1) : 0;
+
+  // efectos temporales (los da la caja aleatoria); si se repite uno activo, se suma su tiempo
+  let buffs = [];
+  const buffMult = kind => buffs.filter(b => b.kind === kind).reduce((m, b) => m * b.mult, 1);
+  function addBuff(id, kind, mult, dur, name) {
+    const b = buffs.find(x => x.id === id);
+    if (b) b.t += dur; else buffs.push({ id, kind, mult, t: dur, name });
+  }
+  let hordeLeft = 0;
+  const BOX_EVENTS = [
+    { id: 'cps',   w: 3, text: 'Producción ×20 por 15 s', run: () => addBuff('cps', 'cps', 20, 15, 'Producción ×20') },
+    { id: 'coin',  w: 3, text: 'Monedas ×10 por 20 s',    run: () => addBuff('coin', 'coin', 10, 20, 'Monedas ×10') },
+    { id: 'rain',  w: 2, text: null, run: () => { const g = Math.max(50, totalCps() * 60); wallet.moneda += g; life.passive += g; return `Lluvia de monedas: +${fmt(g)}`; } },
+    { id: 'soul',  w: 2, moobs: true, text: 'Almas ×5 por 20 s', run: () => addBuff('soul', 'soul', 5, 20, 'Almas ×5') },
+    { id: 'horde', w: 2, moobs: true, text: '¡Horda de moobs!', run: () => { hordeLeft = 2; } },
+    { id: 'boost', w: 1, text: 'Boost gratis', run: () => { boost.cd = 0; startBoost(true); } },
+  ];
+  function openBox() {
+    const pool = BOX_EVENTS.filter(e => !e.moobs || UPGRADES.moobs.owned);
+    let r = Math.random() * pool.reduce((s, e) => s + e.w, 0), ev = pool[0];
+    for (const e of pool) { r -= e.w; if (r <= 0) { ev = e; break; } }
+    const msg = ev.run() || ev.text;
+    life.boxes++;
+    toast('Caja: ' + msg);
+    renderStats(); saveGame();
+  }
+  const BOX_H = 44; // altura de la caja sobre el piso
+  const box = { on: false, wx: 0, silver: false, timer: 20 };
+  let silverBoxes = 0;
+  const boxesUnlocked = () => life.spent >= 100;
+  function updateBox(dt) {
+    if (!boxesUnlocked()) return;
+    if (!box.on) {
+      box.timer -= dt;
+      if (box.timer <= 0) { box.on = true; box.wx = scroll + W + 20; box.silver = Math.random() < .1; }
+      return;
+    }
+    const sx = box.wx - scroll, cy = GROUND - BOX_H;
+    const top = GROUND - 22 + hero.y, bot = GROUND + hero.y;
+    if (Math.abs(sx - HERO_X) < 9 && cy > top - 7 && cy < bot) {
+      box.on = false; box.timer = 30 + Math.random() * 90;
+      for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; fx.push({ x: sx, y: cy, vx: Math.cos(a) * 50, vy: Math.sin(a) * 50, life: .5, kind: 'spark', col: box.silver ? '220,232,255' : '255,200,90' }); }
+      if (box.silver) { silverBoxes++; toast('Caja plateada guardada'); renderStats(); saveGame(); }
+      else openBox();
+    } else if (sx < -14) { box.on = false; box.timer = 30 + Math.random() * 90; }
+  }
+  const boxFrames = ['#f2c14e', '#d9e2ec'].map((main, si) => {
+    const cv = document.createElement('canvas'); cv.width = cv.height = 14;
+    const c = cv.getContext('2d'), dark = si ? '#8a9bb0' : '#c4862a', light = si ? '#ffffff' : '#fff1a8';
+    c.fillStyle = main; c.fillRect(2, 2, 10, 10);
+    c.fillStyle = dark; c.fillRect(2, 11, 10, 1); c.fillRect(11, 2, 1, 10);
+    c.fillStyle = light; c.fillRect(2, 2, 10, 1); c.fillRect(2, 2, 1, 10);
+    c.fillStyle = '#1a1423';
+    ['.KKK.', 'K...K', '...K.', '..K..', '.....', '..K..'].forEach((r, y) => [...r].forEach((ch, x) => { if (ch === 'K') c.fillRect(5 + x, 3 + y, 1, 1); }));
+    outline(c, 14);
+    return cv;
+  });
+  function drawBox() {
+    if (!box.on) return;
+    const sx = box.wx - scroll, cy = GROUND - BOX_H + Math.sin(clock * 3) * 2;
+    if (sx > W + 8) {
+      if (cfg.guides) { g.fillStyle = box.silver ? '#d9e2ec' : '#f2c14e'; for (let i = 0; i < 4; i++) g.fillRect(W - 3 - i, Math.round(cy) - i, 1, i * 2 + 1); }
+      return;
+    }
+    g.fillStyle = 'rgba(255,220,140,.2)'; g.beginPath(); g.arc(sx, cy, 10, 0, Math.PI * 2); g.fill();
+    g.drawImage(boxFrames[box.silver ? 1 : 0], Math.round(sx - 7), Math.round(cy - 7));
+  }
+  function drawSpeedLines() {
+    if (boost.t <= 0) return;
+    g.fillStyle = 'rgba(239,233,255,.35)';
+    for (let i = 0; i < 14; i++) {
+      const y = (rnd(i * 13) * (GROUND - 10)) | 0, len = 10 + rnd(i * 7) * 22;
+      const x = ((W - ((clock * 600 + rnd(i) * W * 3) % (W + len))) | 0);
+      g.fillRect(x, y, len | 0, 1);
+    }
+  }
+
+  // logros: cada uno da +1% de monedas por segundo (como los cinturones del original)
+  const ACH = [
+    { id: 'c100',   name: 'Bolsillo lleno',     text: 'Recoge 100 monedas',          prog: () => life.coins,    goal: 100 },
+    { id: 'c10k',   name: 'Cofre de monedas',   text: 'Recoge 10.000 monedas',       prog: () => life.coins,    goal: 10000 },
+    { id: 'm100',   name: 'Cazador de moobs',   text: 'Derrota 100 moobs',           prog: () => life.moobs,    goal: 100 },
+    { id: 'm1k',    name: 'Terror de los moobs', text: 'Derrota 1.000 moobs',        prog: () => life.moobs,    goal: 1000 },
+    { id: 'cps10',  name: 'Pequeña fortuna',    text: 'Llega a 10 monedas/s',        prog: () => totalCps(),    goal: 10 },
+    { id: 'cps1k',  name: 'Mercader',           text: 'Llega a 1.000 monedas/s',     prog: () => totalCps(),    goal: 1000 },
+    { id: 'cps100k', name: 'Magnate',           text: 'Llega a 100.000 monedas/s',   prog: () => totalCps(),    goal: 100000 },
+    { id: 'j500',   name: 'Saltarín',           text: 'Salta 500 veces',             prog: () => life.jumps,    goal: 500 },
+    { id: 'b10',    name: 'Con prisa',          text: 'Usa el boost 10 veces',       prog: () => life.boosts,   goal: 10 },
+    { id: 'b100',   name: 'Velocista',          text: 'Usa el boost 100 veces',      prog: () => life.boosts,   goal: 100 },
+    { id: 'x5',     name: 'Curioso',            text: 'Abre 5 cajas aleatorias',     prog: () => life.boxes,    goal: 5 },
+    { id: 'x50',    name: 'Coleccionista',      text: 'Abre 50 cajas aleatorias',    prog: () => life.boxes,    goal: 50 },
+    { id: 'g1',     name: 'Matagigantes',       text: 'Derrota un moob gigante',     prog: () => life.giants,   goal: 1 },
+    { id: 'g25',    name: 'Leyenda',            text: 'Derrota 25 moobs gigantes',   prog: () => life.giants,   goal: 25 },
+    { id: 'a1',     name: 'Renacer',            text: 'Asciende por primera vez',    prog: () => asc.count,     goal: 1 },
+    { id: 'u1',     name: 'Más allá',           text: 'Haz una ultra ascensión',     prog: () => asc.ultras,    goal: 1 },
+  ];
+  const achieved = new Set();
+  const achMult = () => 1 + .01 * achieved.size;
+  function checkAch() {
+    let got = false;
+    ACH.forEach(a => { if (!achieved.has(a.id) && a.prog() >= a.goal) { achieved.add(a.id); got = true; toast(`Logro: ${a.name} (+1% monedas/s)`); } });
+    if (got) { renderStats(); saveGame(); }
+  }
+
+  // gigantes: moob grande en el piso con 4 de vida; lo dañan el toque y el ataque
+  const GIANT = { hp: 4, reward: 25, chance: .12 };
 
   function spawnGroup() {
-    const g0 = PATTERNS[cfg.pattern]();
+    let g0 = PATTERNS[cfg.pattern]();
+    if (UPGRADES.moobs.owned && hordeLeft > 0) { hordeLeft--; g0 = { type: 'moob', count: 5, hk: pick(ALLOWED.moob), gap: randInt(30, 70) }; }
+    else if (UPGRADES.moobs.owned && cfg.pattern === 'grupos' && Math.random() < GIANT.chance) g0 = { type: 'moob', count: 1, hk: 'bajo', gap: randInt(40, 100), giant: true };
     stats.n++;
     group = { n: stats.n, ...g0, got: 0, miss: 0, air: 0, done: false };
     const start = scroll + W + 8 + g0.gap;
-    items = Array.from({ length: g0.count }, (_, i) => ({ wx: start + i * SPACING, alive: true, ph: i * .7 }));
+    items = Array.from({ length: g0.count }, (_, i) => ({ wx: start + i * SPACING, alive: true, ph: i * .7, hp: g0.giant ? GIANT.hp : 1, hitCd: 0, swing: -1 }));
     stats.log.unshift(group);
     stats.log.length = Math.min(stats.log.length, 6);
     renderStats();
   }
-  function itemY(it) { return GROUND - HEIGHTS[group.hk] + Math.sin(clock * 4 + it.ph) * 1.5; }
+  function spawnGiant() {
+    stats.n++;
+    group = { n: stats.n, type: 'moob', count: 1, hk: 'bajo', gap: 40, giant: true, got: 0, miss: 0, air: 0, done: false };
+    items = [{ wx: scroll + W + 48, alive: true, ph: 0, hp: GIANT.hp, hitCd: 0, swing: -1 }];
+    stats.log.unshift(group); stats.log.length = Math.min(stats.log.length, 6);
+    renderStats();
+  }
+  function itemY(it) { return group.giant ? GROUND - 13 + Math.abs(Math.sin(clock * 3)) * -1.5 : GROUND - HEIGHTS[group.hk] + Math.sin(clock * 4 + it.ph) * 1.5; }
   function resolve(it, result, sx, cy) {
     it.alive = false;
     if (result === 'miss') { group.miss++; stats.miss++; stats.lifeMiss = (stats.lifeMiss || 0) + 1; }
     else {
-      let amt = 1;
+      let amt = group.giant ? GIANT.reward : 1;
       if (group.type === 'moneda') {
         if (has('reinversion')) amt += .1 * totalCps();
         if (Math.random() < derived().double) amt *= 2;
-      } else if (has('almas') && Math.random() < .25) amt = 2;
+        amt *= buffMult('coin');
+      } else {
+        if (has('almas') && Math.random() < .25) amt *= 2;
+        amt *= buffMult('soul');
+        if (group.giant) life.giants++;
+      }
       amt *= 1 + actBonus();
       group.got++; stats.got++; wallet[group.type] += amt;
       if (group.type === 'moneda') life.coins += amt; else life.moobs += amt;
@@ -1001,6 +1161,39 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     }
     renderStats();
   }
+  // ---------- DEV: autoataque y autorecogida ----------
+  // Predicen si un salto ahora alcanza al objetivo cuando pase por el héroe, y atacan a los moobs al alcance.
+  const dev = { autoAtk: false, autoCol: false };
+  function jumpWouldHit(cy, dx, v) {
+    if (v <= 0 || dx < 0) return false;
+    const t = dx / v, y = -215 * t + 310 * t * t; // misma física del salto (vy0 = -215, g = 620)
+    if (t > .69) return false; // ya habría aterrizado
+    return cy > GROUND - 22 + y - 5 && cy < GROUND + y;
+  }
+  function autoPlay() {
+    const v0 = currentSpeed();
+    if (dev.autoCol && box.on && !hero.air) { const bx = box.wx - scroll - HERO_X; if (jumpWouldHit(GROUND - BOX_H, bx, v0)) { jump(); return; } }
+    if (!items.length || !group || (!dev.autoAtk && !dev.autoCol)) return;
+    if (group.giant) { if (dev.autoAtk && hero.atkT < 0) { const gx = items[0].wx - scroll - HERO_X; if (gx > -10 && gx < 30) attack(); } return; }
+    const isMoob = group.type === 'moob';
+    if (isMoob ? !dev.autoAtk : !dev.autoCol) return;
+    const v = v0;
+    const alive = items.filter(i => i.alive).map(it => ({ dx: it.wx - scroll - HERO_X, cy: itemY(it) }));
+    if (!alive.length) return;
+    if (isMoob && hero.atkT < 0) {
+      // golpe si algún moob está dentro del arco del corte
+      const ox = HERO_X - 1, oy = GROUND - 11 + hero.y;
+      if (alive.some(m => { const ddx = m.dx + HERO_X - ox, ddy = m.cy - oy, dist = Math.hypot(ddx, ddy), ang = Math.atan2(ddy, ddx); return dist > 4 && dist < 21 && ang > -1.7 && ang < 0.8; })) attack();
+    }
+    if (hero.air || alive[0].cy > GROUND - 27) return; // en el piso se alcanzan corriendo
+    // salta en el momento que alcanza más objetos del grupo
+    const hits = delay => alive.reduce((n, m) => n + (jumpWouldHit(m.cy, m.dx - v * delay, v) ? 1 : 0), 0);
+    const now = hits(0);
+    if (!now) return;
+    let best = now;
+    for (let d = .02; d <= .6; d += .02) best = Math.max(best, hits(d));
+    if (now >= best) jump();
+  }
   function updateMoob(dt) {
     if (!items.length) { waitT -= dt; if (waitT <= 0) spawnGroup(); return; }
     const top = GROUND - 22 + hero.y, bot = GROUND + hero.y;
@@ -1008,6 +1201,19 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     if (hero.atkT >= 0 && (group.type === 'moob' || hero.aerial)) {
       const af = Math.floor(hero.atkT * ANIMS.attack.fps);
       if (af === 2 || af === 3) slash = { x: HERO_X - 1, y: GROUND - 11 + hero.y };
+    }
+    if (group.giant) {
+      const it = items[0], sx = it.wx - scroll, cy = itemY(it);
+      it.hitCd = Math.max(0, it.hitCd - dt);
+      let dmg = 0;
+      if (Math.abs(sx - HERO_X) < 16 && bot > cy - 14 && it.hitCd <= 0) { dmg++; it.hitCd = .3; }
+      if (slash && it.swing !== hero.swing) { const d = Math.hypot(sx - slash.x, cy - slash.y); if (d < 30) { dmg++; it.swing = hero.swing; group.air = 1; } }
+      if (dmg) {
+        it.hp -= dmg;
+        for (let i = 0; i < 5; i++) fx.push({ x: sx - 8 + rnd(clock + i) * 6, y: cy - 6 + rnd(i) * 12, vx: 30 + rnd(i * 3) * 30, vy: -20 + rnd(i * 5) * 40, life: .3, kind: 'spark', col: '228,139,240' });
+        if (it.hp <= 0) resolve(it, 'ok', sx, cy);
+      } else if (sx < -20) resolve(it, 'miss', sx, cy);
+      return;
     }
     for (const it of items) {
       if (!it.alive) continue;
@@ -1037,9 +1243,14 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
       if (!it.alive) continue;
       const sx = it.wx - scroll, cy = itemY(it);
       if (sx > W + 7) { arrow = true; continue; }
-      g.fillStyle = T.glow; g.beginPath(); g.arc(sx, cy, group.type === 'moob' ? 9 : 7, 0, Math.PI * 2); g.fill();
-      const frames = group.type === 'moob' && group.hk !== 'bajo' ? moobFlyFrames : T.frames;
-      g.drawImage(frames[Math.floor(clock * 8 + it.ph * 2) % 4], Math.round(sx - 7), Math.round(cy - 7));
+      g.fillStyle = T.glow; g.beginPath(); g.arc(sx, cy, group.giant ? 17 : group.type === 'moob' ? 9 : 7, 0, Math.PI * 2); g.fill();
+      const frames = group.type === 'moob' && group.hk !== 'bajo' && !group.giant ? moobFlyFrames : T.frames;
+      const fr = frames[Math.floor(clock * 8 + it.ph * 2) % 4];
+      if (group.giant) {
+        g.drawImage(fr, Math.round(sx - 14), Math.round(cy - 15), 28, 28);
+        g.fillStyle = '#1a1423'; g.fillRect(Math.round(sx - 11), Math.round(cy - 20), 22, 4);
+        g.fillStyle = '#ff7a8a'; g.fillRect(Math.round(sx - 10), Math.round(cy - 19), Math.round(20 * it.hp / GIANT.hp), 2);
+      } else g.drawImage(fr, Math.round(sx - 7), Math.round(cy - 7));
     }
     if (arrow && cfg.guides) {
       const y = Math.round(GROUND - HEIGHTS[group.hk]);
@@ -1072,7 +1283,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
       let res, cls;
       if (!e.done) { res = 'En camino'; cls = 'wait'; }
       else { res = `${e.got}/${e.count}` + (e.air ? ` · ${e.air} con ataque` : ''); cls = e.got === e.count ? 'ok' : e.got ? 'part' : 'miss'; }
-      return `<li><span class="n">#${e.n}</span><span class="pill ${e.hk}">${e.hk}</span><span class="what"><i class="dot ${e.type}"></i>${e.count} ${e.count > 1 ? T.plural : T.name}</span><span class="res ${cls}">${res}</span></li>`;
+      return `<li><span class="n">#${e.n}</span><span class="pill ${e.hk}">${e.hk}</span><span class="what"><i class="dot ${e.type}"></i>${e.giant ? 'moob gigante' : `${e.count} ${e.count > 1 ? T.plural : T.name}`}</span><span class="res ${cls}">${res}</span></li>`;
     }).join('') : '<li class="empty" style="display:block">Aún no aparece ningún grupo.</li>';
   }
   const nf = n => Math.floor(n).toLocaleString('es-CO');
@@ -1234,6 +1445,17 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     adots[0].hidden = !ready; adots[1].hidden = !canNode; adots[2].hidden = !(asc.usp >= 1 || (ul && ultraGain() >= 1));
     document.getElementById('ascBadge').hidden = !(ready || canNode || asc.usp >= 1);
   }
+  function renderBuffs() {
+    const chips = buffs.map(b => `<span>${b.name} · ${Math.ceil(b.t)} s</span>`);
+    if (boost.t > 0) chips.unshift(`<span class="boost">Boost · ${Math.ceil(boost.t)} s</span>`);
+    const html = chips.join('');
+    const el = document.getElementById('buffs'); if (el.innerHTML !== html) el.innerHTML = html;
+    const bb = document.getElementById('btnBoost');
+    bb.textContent = boost.t > 0 ? `Boost · ${Math.ceil(boost.t)} s` : boost.cd > 0 ? `Espera · ${Math.ceil(boost.cd)} s` : `Boost · ${BOOST.cost}`;
+    bb.disabled = boost.cd > 0 || wallet.moneda < BOOST.cost;
+    document.getElementById('btnSilver').hidden = silverBoxes < 1;
+    document.getElementById('silverN').textContent = silverBoxes;
+  }
   function renderLife() {
     const tot = life.coins + life.moobs;
     const misses = stats.lifeMiss || 0;
@@ -1246,10 +1468,14 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
       ['Distancia', nf(Math.floor(life.dist / 16)) + ' m'], ['Tiempo de juego', `${mm}:${ss}`],
       ['Ascensiones', nf(asc.count)], ['Puntos Slayer ganados', nf(asc.psTotal)],
       ['Ultra ascensiones', nf(asc.ultras)], ['PUS ganados', nf(asc.uspTotal)],
+      ['Boosts usados', nf(life.boosts)], ['Cajas abiertas', nf(life.boxes)],
+      ['Gigantes derrotados', nf(life.giants)], ['Logros', `${achieved.size} / ${ACH.length}`],
       ['Monedas por segundo', fmtCps(totalCps())], ['Monedas pasivas', fmt(life.passive)],
       ['Monedas gastadas', fmt(life.spent)], ['Piezas compradas', nf(life.equipBought)],
     ];
     document.getElementById('lifeStats').innerHTML = rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+    document.getElementById('achHead').textContent = `Logros (${achieved.size}/${ACH.length}) · +${achieved.size}% monedas/s`;
+    document.getElementById('achList').innerHTML = ACH.map(a => { const ok = achieved.has(a.id); return `<div class="${ok ? 'ok' : ''}"><b>${a.name}</b>${a.text}${ok ? '' : ` · ${fmt(Math.min(a.prog(), a.goal))}/${fmt(a.goal)}`}</div>`; }).join('');
   }
   function renderNext() {
     const el = document.getElementById('sNext');
@@ -1263,7 +1489,9 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   function loop(now) {
     let dt = Math.max(0, Math.min(.05, (now - last) / 1000)); last = now;
     if (cfg.pauseShop && (!shopEl.hidden || !ascEl.hidden)) dt = 0;
-    const speed = hero.running ? 90 * derived().speed : 0;
+    const speed = currentSpeed();
+    boost.t = Math.max(0, boost.t - dt); boost.cd = Math.max(0, boost.cd - dt);
+    buffs.forEach(b => { b.t -= dt; }); buffs = buffs.filter(b => b.t > 0);
     life.dist += speed * dt; life.time += dt;
     const cpsNow = totalCps(); wallet.moneda += cpsNow * dt; life.passive += cpsNow * dt;
     scroll += speed * dt;
@@ -1277,7 +1505,9 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     hero.animT += dt;
     if (hero.pendingAerial && hero.air && hero.vy > -70) { hero.pendingAerial = false; hero.atkT = 0; hero.aerial = true; }
     if (!hero.air) hero.pendingAerial = false;
+    autoPlay();
     updateMoob(dt);
+    updateBox(dt);
 
     // choose sprite
     let state, f, legPose = null;
@@ -1305,7 +1535,9 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     drawTrees(.45, '#2a1c3c', .75, 11);
     drawTrees(.7, '#1f1530', .95, 23);
     drawGround();
+    drawSpeedLines();
     drawMoob();
+    drawBox();
 
     // shadow
     const sh = Math.max(4, 10 - Math.abs(hero.y) / 6);
@@ -1325,7 +1557,9 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
       document.getElementById('hudCoins').textContent = fmt(wallet.moneda);
       document.getElementById('statCoins').textContent = fmt(wallet.moneda);
       document.getElementById('shopCoins').textContent = fmt(wallet.moneda);
+      renderBuffs();
       if ((shopTick = (shopTick || 0) + 1) % 3 === 0) { renderShop(); renderUpgrade(); }
+      if (shopTick % 5 === 0) checkAch();
     }
 
     hudState.textContent = state === 'attack' ? 'Atacando' : base === 'jump' ? 'Saltando' : base === 'run' ? 'Corriendo' : 'Quieto';
@@ -1371,6 +1605,12 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
   document.getElementById('btnJump').addEventListener('click', jump);
   document.getElementById('btnAttack').addEventListener('click', attack);
   document.getElementById('btnAerial').addEventListener('click', aerialAttack);
+  document.getElementById('btnBoost').addEventListener('click', () => startBoost(false));
+  document.getElementById('btnSilver').addEventListener('click', () => { if (silverBoxes > 0) { silverBoxes--; openBox(); } });
+  [['btnAutoAtk', 'autoAtk'], ['btnAutoCol', 'autoCol']].forEach(([id, k]) => {
+    const b = document.getElementById(id);
+    b.addEventListener('click', () => { dev[k] = !dev[k]; b.setAttribute('aria-pressed', String(dev[k])); saveGame(); });
+  });
   btnRun.addEventListener('click', toggleRun);
   game.addEventListener('pointerdown', attack);
   window.addEventListener('keydown', e => {
@@ -1379,6 +1619,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     else if (e.code === 'KeyJ' || e.code === 'KeyX') attack();
     else if (e.code === 'KeyK') aerialAttack();
     else if (e.code === 'KeyP') toggleRun();
+    else if (e.code === 'KeyB') startBoost(false);
   });
 
   const patternSel = document.getElementById('pattern'), delayIn = document.getElementById('delay'), guidesIn = document.getElementById('guides');
@@ -1459,7 +1700,7 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     EQUIP.forEach(e => { e.lv = 0; }); eqUps.clear();
     UPGRADES.moobs.owned = false; claimed.clear();
     Object.assign(asc, { psAvail: 0, psTotal: 0, count: 0, usp: 0, uspTotal: 0, ultras: 0, stones: { act: 0, idle: 0 } }); asc.nodes.clear();
-    life = freshLife();
+    life = freshLife(); achieved.clear(); silverBoxes = 0; buffs = []; boost.t = boost.cd = 0; hordeLeft = 0; box.on = false; box.timer = 20;
     stats.got = stats.miss = stats.n = 0; stats.lifeMiss = 0; stats.log = [];
     items = []; group = null; waitT = .6; altHigh = false;
     resetConfirm.hidden = true; resetAsk.hidden = false;
@@ -1495,6 +1736,8 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
       .forEach((r, y) => [...r].forEach((ch, x) => { if (col[ch]) { c.fillStyle = col[ch]; c.fillRect(x, y, 1, 1); } }));
   }
   document.getElementById('devSouls').addEventListener('click', () => { wallet.moob += 20; life.moobs += 20; renderStats(); });
+  document.getElementById('devBox').addEventListener('click', () => { life.spent = Math.max(life.spent, 100); box.on = true; box.wx = scroll + W + 20; box.silver = false; });
+  document.getElementById('devGiant').addEventListener('click', () => { if (!UPGRADES.moobs.owned) buyMoobs(true); items = []; group = null; waitT = 99; const old = cfg.pattern; spawnGiant(); });
   document.getElementById('devPS').addEventListener('click', () => { asc.psAvail += 5; asc.psTotal += 5; renderStats(); });
   document.getElementById('devUnlock').addEventListener('click', () => buyMoobs(true));
   document.getElementById('devLock').addEventListener('click', lockMoobs);
@@ -1518,6 +1761,8 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
       asc: { ...asc, nodes: [...asc.nodes], stones: { ...asc.stones } },
       life: { ...life },
       stats: { got: stats.got, miss: stats.miss, n: stats.n, lifeMiss: stats.lifeMiss || 0 },
+      dev: { ...dev },
+      ach: [...achieved], silver: silverBoxes,
       cfg: { guides: cfg.guides, particles: cfg.particles, pauseShop: cfg.pauseShop, hud: cfg.hud !== false, pattern: cfg.pattern, delay: cfg.delay },
     };
   }
@@ -1540,6 +1785,11 @@ input[type=range] { accent-color: var(--ember); width: 160px; max-width: 100%; }
     life.streak = 0;
     stats.got = num(d.stats?.got); stats.miss = num(d.stats?.miss); stats.n = num(d.stats?.n); stats.lifeMiss = num(d.stats?.lifeMiss);
     const c = d.cfg || {};
+    achieved.clear(); (d.ach || []).forEach(id => { if (ACH.some(a => a.id === id)) achieved.add(id); });
+    silverBoxes = Math.floor(num(d.silver));
+    dev.autoAtk = !!d.dev?.autoAtk; dev.autoCol = !!d.dev?.autoCol;
+    document.getElementById('btnAutoAtk').setAttribute('aria-pressed', String(dev.autoAtk));
+    document.getElementById('btnAutoCol').setAttribute('aria-pressed', String(dev.autoCol));
     cfg.guides = c.guides !== false; cfg.particles = c.particles !== false; cfg.pauseShop = !!c.pauseShop; cfg.hud = c.hud !== false;
     if (PATTERNS[c.pattern]) cfg.pattern = c.pattern;
     if (typeof c.delay === 'number') cfg.delay = Math.min(3, Math.max(0, c.delay));
